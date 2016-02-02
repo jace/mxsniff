@@ -35,5 +35,5 @@ setup(name='mxsniffer',
     include_package_data=True,
     zip_safe=True,
     test_suite='tests',
-    install_requires=['six', 'dnspython'],
+    install_requires=['six', 'dnspython', 'tldextract'],
     )

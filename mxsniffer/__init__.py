@@ -8,11 +8,12 @@ from __future__ import absolute_import
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
 import dns.resolver
+import tldextract
 
 from ._version import __version__, __version_info__  # NOQA
 from .providers import providers
 
-__all__ = ['MXLookupException', 'get_domain', 'mxsniff']
+__all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
 
 provider_domains = {}
@@ -42,7 +43,7 @@ def get_domain(email_or_domain):
         name, addr = parseaddr(email_or_domain)
         domain = addr.split('@', 1)[-1]
     elif '//' in email_or_domain:
-        domain = urlparse(email_or_domain).netloc.split(':')[0]
+        domain = tldextract.extract(urlparse(email_or_domain).netloc.split(':')[0]).registered_domain
     else:
         domain = email_or_domain.strip()
     return domain
@@ -90,3 +91,19 @@ def mxsniff(email_or_domain, ignore_errors=False):
         return result[0]
     else:
         return result
+
+
+def mxbulksniff(items, ignore_errors=True):
+    """
+    Identify the email service provider of a large set of domains or emails, caching to avoid
+    repeat queries.
+
+    >>> sorted(mxbulksniff(['example.com', 'google.com', 'http://www.google.com']).items())
+    [('example.com', None), ('google.com', 'google-apps'), ('http://www.google.com', 'google-apps')]
+    """
+    domain_cache = {}
+    results = {}
+    for i in items:
+        domain = get_domain(i)
+        results[i] = domain_cache[domain] if domain in domain_cache else mxsniff(domain, ignore_errors)
+    return results

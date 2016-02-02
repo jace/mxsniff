@@ -3,9 +3,13 @@ language: python
 cache: pip
 python:
   - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
 # command to install dependencies
 install:
   - python setup.py develop
+  - pip install nose coverage
 script: coverage run `which nosetests`
 after_success:
   - coveralls
