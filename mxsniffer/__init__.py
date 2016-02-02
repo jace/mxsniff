@@ -5,6 +5,7 @@ MX Sniffer identifies common email service providers given an email address or a
 """
 
 from __future__ import absolute_import
+from six import text_type
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
 import dns.resolver
@@ -83,7 +84,7 @@ def mxsniff(email_or_domain, ignore_errors=False):
             pass
         else:
             raise MXLookupException('{exc} {error} ({domain})'.format(
-                exc=e.__class__.__name__, error=unicode(e), domain=domain))
+                exc=e.__class__.__name__, error=text_type(e), domain=domain))
 
     if len(result) == 0:
         return None
