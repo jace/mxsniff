@@ -30,4 +30,14 @@ providers = {
         'pb-mx8.pobox.com',
         'pb-mx3.pobox.com',
     ],
+    'yahoo-mail': [
+        'mta5.am0.yahoodns.net',
+        'mta6.am0.yahoodns.net',
+        'mta7.am0.yahoodns.net',
+        'mx-apac.mail.gm0.yahoodns.net',
+        'mx-eu.mail.am0.yahoodns.net',
+    ],
+    'yahoo-bizmail': [
+        'mx-biz.mail.am0.yahoodns.net',
+    ],
 }
