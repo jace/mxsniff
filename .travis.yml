@@ -1,0 +1,14 @@
+sudo: false
+language: python
+cache: pip
+python:
+  - "2.7"
+# command to install dependencies
+install:
+  - python setup.py develop
+script: coverage run `which nosetests`
+after_success:
+  - coveralls
+notifications:
+  email: false
+  slack: friendsofhasgeek:3bLViYSzhfaThJovFYCVD3fX
