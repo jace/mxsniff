@@ -5,8 +5,8 @@ MX Sniffer
    :target: https://travis-ci.org/jace/mxsniffer
    :alt: Build status
 
-.. image:: https://coveralls.io/repos/jace/mxsniffer/badge.svg
-   :target: https://coveralls.io/r/jace/mxsniffer
+.. image:: https://coveralls.io/repos/github/jace/mxsniffer/badge.svg?branch=master
+   :target: https://coveralls.io/github/jace/mxsniffer?branch=master
    :alt: Coverage status
 
 MX Sniffer identifies well known email service providers given
