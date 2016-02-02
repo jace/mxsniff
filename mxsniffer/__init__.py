@@ -5,7 +5,7 @@ MX Sniffer identifies common email service providers given an email address or a
 """
 
 from __future__ import absolute_import
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
 import dns.resolver
 
@@ -44,26 +44,24 @@ def get_domain(email_or_domain):
     elif '//' in email_or_domain:
         domain = urlparse(email_or_domain).netloc.split(':')[0]
     else:
-        domain = email_or_domain
+        domain = email_or_domain.strip()
     return domain
 
 
-def mxsniff(email_or_domain):
+def mxsniff(email_or_domain, ignore_errors=False):
     """
     Lookup MX records for a given email address, URL or domain name and identify the email service provider(s)
     from an internal list of known service providers.
 
     :param str email_or_domain: Email, domain or URL to lookup
-    :return: List of identified service providers, typically zero or one, but possibly more in unusual circumstances
+    :return: Identified service provider, or a list if there's more than one (in unusual circumstances)
 
     >>> mxsniff('example.com')
-    []
-    >>> mxsniff('example@gmail.com')
-    ['google-gmail']
-    >>> mxsniff('https://google.com/')
-    ['google-apps']
     >>> mxsniff('__invalid_domain_name__.com')
-    []
+    >>> mxsniff('example@gmail.com')
+    'google-gmail'
+    >>> mxsniff('https://google.com/')
+    'google-apps'
     """
     domain = get_domain(email_or_domain)
 
@@ -77,9 +75,18 @@ def mxsniff(email_or_domain):
                 provider = provider_domains[exchange]
                 if provider not in result:
                     result.append(provider)
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
         pass
     except dns.exception.DNSException as e:
-        raise MXLookupException('{exc} {error}'.format(exc=e.__class__.__name__, error=unicode(e)))
+        if ignore_errors:
+            pass
+        else:
+            raise MXLookupException('{exc} {error} ({domain})'.format(
+                exc=e.__class__.__name__, error=unicode(e), domain=domain))
 
-    return result
+    if len(result) == 0:
+        return None
+    elif len(result) == 1:
+        return result[0]
+    else:
+        return result
