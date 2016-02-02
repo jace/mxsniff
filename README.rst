@@ -2,6 +2,7 @@ MX Sniffer
 ==========
 
 .. image:: https://secure.travis-ci.org/jace/mxsniffer.svg
+   :target: https://travis-ci.org/jace/mxsniffer
    :alt: Build status
 
 .. image:: https://coveralls.io/repos/jace/mxsniffer/badge.svg
