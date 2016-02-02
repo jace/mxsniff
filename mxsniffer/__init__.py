@@ -34,7 +34,7 @@ def get_domain(email_or_domain):
     >>> get_domain('example@example.com')
     'example.com'
     >>> get_domain('http://www.example.com')
-    'www.example.com'
+    'example.com'
     >>> get_domain('example.com')
     'example.com'
     """
