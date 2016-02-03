@@ -50,7 +50,7 @@ def get_domain(email_or_domain):
     return domain
 
 
-def mxsniff(email_or_domain, ignore_errors=False):
+def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
     """
     Lookup MX records for a given email address, URL or domain name and identify the email service provider(s)
     from an internal list of known service providers.
@@ -64,6 +64,8 @@ def mxsniff(email_or_domain, ignore_errors=False):
     'google-gmail'
     >>> mxsniff('https://google.com/')
     'google-apps'
+    >>> mxsniff('google.com', verbose=True)
+    {'mx': [(10, 'aspmx.l.google.com'), (20, 'alt1.aspmx.l.google.com'), (30, 'alt2.aspmx.l.google.com'), (40, 'alt3.aspmx.l.google.com'), (50, 'alt4.aspmx.l.google.com')], 'match': ['google-apps']}
     """
     domain = get_domain(email_or_domain)
 
@@ -86,15 +88,18 @@ def mxsniff(email_or_domain, ignore_errors=False):
             raise MXLookupException('{exc} {error} ({domain})'.format(
                 exc=e.__class__.__name__, error=text_type(e), domain=domain))
 
-    if len(result) == 0:
-        return None
-    elif len(result) == 1:
-        return result[0]
+    if verbose:
+        return {'match': result, 'mx': answers}
     else:
-        return result
+        if len(result) == 0:
+            return None
+        elif len(result) == 1:
+            return result[0]
+        else:
+            return result
 
 
-def mxbulksniff(items, ignore_errors=True):
+def mxbulksniff(items, verbose=False, ignore_errors=True):
     """
     Identify the email service provider of a large set of domains or emails, caching to avoid
     repeat queries.
@@ -106,5 +111,5 @@ def mxbulksniff(items, ignore_errors=True):
     results = {}
     for i in items:
         domain = get_domain(i)
-        results[i] = domain_cache[domain] if domain in domain_cache else mxsniff(domain, ignore_errors)
+        results[i] = domain_cache[domain] if domain in domain_cache else mxsniff(domain, verbose, ignore_errors)
     return results

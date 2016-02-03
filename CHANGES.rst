@@ -6,6 +6,7 @@
 * ``get_domain`` now extracts the TLD when a URL is provided, so ``www.`` and other subdomains are ignored
 * New: ``mxbulksniff`` to run on a large list
 * New providers: Yahoo Mail and Yahoo Biz Mail
+* Verbose mode to also retrieve MX values
 
 0.1
 ===
