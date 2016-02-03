@@ -19,8 +19,8 @@ __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
 provider_domains = {}
 
-for name, domains in providers.items():
-    for domain in domains:
+for name, data in providers.items():
+    for domain in data['mx']:
         provider_domains[domain.lower()] = name
 
 
