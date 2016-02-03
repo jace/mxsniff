@@ -8,6 +8,10 @@ __all__ = ['providers']
 
 
 providers = {
+    'dreamhost': {'mx': [
+        'mx1.sub4.homie.mail.dreamhost.com',
+        'mx2.sub4.homie.mail.dreamhost.com',
+    ]},
     'google-gmail': {'mx': [
         'gmail-smtp-in.l.google.com',
         'alt4.gmail-smtp-in.l.google.com',
