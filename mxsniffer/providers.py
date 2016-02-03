@@ -26,6 +26,12 @@ providers = {
         'alt3.aspmx.l.google.com',
         'alt4.aspmx.l.google.com',
     ]},
+    'hotmail': {'mx': [
+        'mx1.hotmail.com',
+        'mx2.hotmail.com',
+        'mx3.hotmail.com',
+        'mx4.hotmail.com',
+    ]},
     'pobox': {'mx': [
         'pb-mx2.pobox.com',
         'pb-mx5.pobox.com',
