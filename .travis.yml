@@ -10,7 +10,7 @@ python:
 # command to install dependencies
 install:
   - python setup.py develop
-  - pip install nose coverage
+  - pip install nose coverage coveralls
 script: coverage run `which nosetests`
 after_success:
   - coveralls
