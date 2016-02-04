@@ -26,6 +26,24 @@ providers = {
         'alt3.aspmx.l.google.com',
         'alt4.aspmx.l.google.com',
     ]},
+    'outlook-hotmail': {'mx': [
+        'mx1.hotmail.com',
+        'mx2.hotmail.com',
+        'mx3.hotmail.com',
+        'mx4.hotmail.com',
+    ]},
+    'godaddy-us': {'mx': [
+        'mailstore1.secureserver.net',
+        'smtp.secureserver.net',
+    ]},
+    'godaddy-eu': {'mx': [
+        'mailstore1.europe.secureserver.net',
+        'smtp.europe.secureserver.net',
+    ]},
+    'godaddy-as': {'mx': [
+        'mailstore1.asia.secureserver.net',
+        'smtp.asia.secureserver.net',
+    ]},
     'pobox': {'mx': [
         'pb-mx2.pobox.com',
         'pb-mx5.pobox.com',
