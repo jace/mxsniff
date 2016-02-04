@@ -2,6 +2,7 @@
 =====
 
 * Added support for wildcards in domain names
+* Additional providers
 
 0.2.1
 =====

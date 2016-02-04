@@ -8,49 +8,53 @@ __all__ = ['providers']
 
 # NOTE: Please add new providers and MX servers in alphabetic order
 providers = {
-    'dreamhost': {'mx': [
-        'mx1.sub4.homie.mail.dreamhost.com',
-        'mx2.sub4.homie.mail.dreamhost.com',
+    'amazon-aws': {'mx': [
+        'inbound-smtp.*.amazonaws.com',
     ]},
-    'godaddy-us': {'mx': [
+    'dreamhost': {'mx': [
+        '*.mail.dreamhost.com',
+        '*.*.mail.dreamhost.com',
+        '*.*.*.mail.dreamhost.com',
+    ]},
+    'emailsrvr': {'mx': [
+        'emailsrvr.com',
+    ]},
+    'fatcow': {'mx': [
+        'mail.fatcow.com',
+    ]},
+    'godaddy': {'mx': [
         'mailstore1.secureserver.net',
         'smtp.secureserver.net',
-    ]},
-    'godaddy-eu': {'mx': [
         'mailstore1.europe.secureserver.net',
         'smtp.europe.secureserver.net',
-    ]},
-    'godaddy-as': {'mx': [
         'mailstore1.asia.secureserver.net',
         'smtp.asia.secureserver.net',
     ]},
     'google-gmail': {'mx': [
-        'alt1.gmail-smtp-in.l.google.com',
-        'alt2.gmail-smtp-in.l.google.com',
-        'alt3.gmail-smtp-in.l.google.com',
-        'alt4.gmail-smtp-in.l.google.com',
         'gmail-smtp-in.l.google.com',
+        '*.gmail-smtp-in.l.google.com',
     ]},
     'google-apps': {'mx': [
         'aspmx.l.google.com',
-        'alt1.aspmx.l.google.com',
-        'alt2.aspmx.l.google.com',
-        'alt3.aspmx.l.google.com',
-        'alt4.aspmx.l.google.com',
+        '*.aspmx.l.google.com',
+    ]},
+    'mailhostbox': {'mx': [
+        '*.mailhostbox.com',
+    ]},
+    'one.com': {'mx': [
+        '*.one.com'
+    ]},
+    'outlook-bizmail': {'mx': [
+        '*.mail.protection.outlook.com',
     ]},
     'outlook-hotmail': {'mx': [
-        'mx1.hotmail.com',
-        'mx2.hotmail.com',
-        'mx3.hotmail.com',
-        'mx4.hotmail.com',
+        '*.hotmail.com',
     ]},
     'pobox': {'mx': [
-        'pb-mx1.pobox.com',
-        'pb-mx2.pobox.com',
-        'pb-mx3.pobox.com',
-        'pb-mx4.pobox.com',
-        'pb-mx5.pobox.com',
-        'pb-mx8.pobox.com',
+        '*.pobox.com',
+    ]},
+    'siteground': {'mx': [
+        'mailspamprotection.com',
     ]},
     'yahoo-mail': {'mx': [
         'mta5.am0.yahoodns.net',
@@ -61,5 +65,10 @@ providers = {
     ]},
     'yahoo-bizmail': {'mx': [
         'mx-biz.mail.am0.yahoodns.net',
+        'mx-indiabiz.mail.gm0.yahoodns.net',
+    ]},
+    'zoho': {'mx': [
+        '*.zoho.com',
+        '*.zohomail.com',
     ]},
 }
