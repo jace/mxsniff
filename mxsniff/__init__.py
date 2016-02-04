@@ -65,8 +65,8 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
     'google-gmail'
     >>> mxsniff('https://google.com/')
     'google-apps'
-    >>> mxsniff('google.com', verbose=True)
-    {'mx': [(10, 'aspmx.l.google.com'), (20, 'alt1.aspmx.l.google.com'), (30, 'alt2.aspmx.l.google.com'), (40, 'alt3.aspmx.l.google.com'), (50, 'alt4.aspmx.l.google.com')], 'match': ['google-apps']}
+    >>> sorted(mxsniff('google.com', verbose=True).items())
+    [('match', ['google-apps']), ('mx', [(10, 'aspmx.l.google.com'), (20, 'alt1.aspmx.l.google.com'), (30, 'alt2.aspmx.l.google.com'), (40, 'alt3.aspmx.l.google.com'), (50, 'alt4.aspmx.l.google.com')]), ('name', 'google.com')]
     """
     domain = get_domain(email_or_domain)
 
@@ -90,7 +90,7 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
                 exc=e.__class__.__name__, error=text_type(e), domain=domain))
 
     if verbose:
-        return {'match': result, 'mx': answers}
+        return {'name': email_or_domain, 'match': result, 'mx': answers}
     else:
         if len(result) == 0:
             return None
