@@ -1,7 +1,10 @@
+0.2.2
+=====
+
 0.2.1
 =====
 
-* Updated README
+* Updated README and minor bugfixes
 
 0.2.0
 =====

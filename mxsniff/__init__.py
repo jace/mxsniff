@@ -73,6 +73,7 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
     result = []
 
     try:
+        answers = []  # Default value in case of verbose mode where an error occurs
         answers = sorted([(rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
             for rdata in dns.resolver.query(domain, 'MX')])
         for preference, exchange in answers:
