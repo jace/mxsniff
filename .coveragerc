@@ -1,5 +1,5 @@
 [run]
-source = mxsniffer
+source = mxsniff
 
 [report]
 # Regexes for lines to exclude from consideration

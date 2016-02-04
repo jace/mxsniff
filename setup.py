@@ -9,16 +9,16 @@ CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 if sys.version_info.major == 2:
     README = unicode(README, 'utf-8')
     CHANGES = unicode(CHANGES, 'utf-8')
-versionfile = open(os.path.join(here, "mxsniffer", "_version.py")).read()
+versionfile = open(os.path.join(here, "mxsniff", "_version.py")).read()
 
 mo = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]", versionfile, re.M)
 if mo:
     version = mo.group(1)
 else:
-    raise RuntimeError("Unable to find version string in mxsniffer/_version.py.")
+    raise RuntimeError("Unable to find version string in mxsniff/_version.py.")
 
 
-setup(name='mxsniffer',
+setup(name='mxsniff',
     version=version,
     description='MX Sniffer',
     long_description=README + '\n\n' + CHANGES,
@@ -36,16 +36,16 @@ setup(name='mxsniffer',
         ],
     author='Kiran Jonnalagadda',
     author_email='jace@pobox.com',
-    url='https://github.com/jace/mxsniffer',
-    keywords=['mxsniffer', 'email', 'mx'],
-    packages=['mxsniffer'],
+    url='https://github.com/jace/mxsniff',
+    keywords=['mxsniff', 'email', 'mx'],
+    packages=['mxsniff'],
     include_package_data=True,
     zip_safe=True,
     test_suite='tests',
     install_requires=['six', 'tldextract', 'dnspython' if sys.version_info.major == 2 else 'dnspython3'],
     entry_points={
         'console_scripts': [
-            'mxsniff = mxsniffer:main',
+            'mxsniff = mxsniff:main',
         ]
     }
 )
