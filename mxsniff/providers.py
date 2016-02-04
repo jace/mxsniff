@@ -38,6 +38,14 @@ providers = {
         'alt3.aspmx.l.google.com',
         'alt4.aspmx.l.google.com',
     ]},
+    'icloud-me': {'mx': [
+        'mx1.mail.icloud.com',
+        'mx2.mail.icloud.com',
+        'mx3.mail.icloud.com',
+        'mx4.mail.icloud.com',
+        'mx5.mail.icloud.com',
+        'mx6.mail.icloud.com',
+    ]},
     'outlook-hotmail': {'mx': [
         'mx1.hotmail.com',
         'mx2.hotmail.com',
@@ -52,14 +60,33 @@ providers = {
         'pb-mx5.pobox.com',
         'pb-mx8.pobox.com',
     ]},
+    'rediffmail': {'mx': [
+        'mx.rediffmail.rediff.akadns.net',
+    ]},
     'yahoo-mail': {'mx': [
         'mta5.am0.yahoodns.net',
         'mta6.am0.yahoodns.net',
         'mta7.am0.yahoodns.net',
         'mx-apac.mail.gm0.yahoodns.net',
         'mx-eu.mail.am0.yahoodns.net',
+        'mx1.mail.yahoo.co.jp',
+        'mx2.mail.yahoo.co.jp',
+        'mx3.mail.yahoo.co.jp',
+        'mx5.mail.yahoo.co.jp',
     ]},
     'yahoo-bizmail': {'mx': [
         'mx-biz.mail.am0.yahoodns.net',
+    ]},
+    'yandex': {'mx': [
+        'mx.yandex.ru',
+    ]},
+    'zoho-mail': {'mx': [
+        'mx.zoho.com',
+        'mx2.zoho.com',
+    ]},
+    'zoho-personal': {'mx': [
+        'smtpin.zoho.com',
+        'smtpin2.zoho.com',
+        'mx3.zoho.com',
     ]},
 }
