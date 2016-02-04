@@ -134,7 +134,7 @@ def main_internal(args, name='mxsniff'):
         help="ignore DNS lookup errors and continue with next item")
     args = parser.parse_args(args)
     for item, provider in mxbulksniff(args.names, verbose=args.verbose, ignore_errors=args.ignore_errors):
-        print "{item}: {provider}".format(item=item, provider=provider)
+        print("{item}: {provider}".format(item=item, provider=provider))
 
 
 def main():
