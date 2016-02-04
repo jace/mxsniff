@@ -43,4 +43,9 @@ setup(name='mxsniffer',
     zip_safe=True,
     test_suite='tests',
     install_requires=['six', 'tldextract', 'dnspython' if sys.version_info.major == 2 else 'dnspython3'],
-    )
+    entry_points={
+        'console_scripts': [
+            'mxsniff = mxsniffer:main',
+        ]
+    }
+)

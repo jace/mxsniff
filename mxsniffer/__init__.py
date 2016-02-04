@@ -5,6 +5,7 @@ MX Sniffer identifies common email service providers given an email address or a
 """
 
 from __future__ import absolute_import
+import sys
 from six import text_type
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
@@ -102,14 +103,43 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
 def mxbulksniff(items, verbose=False, ignore_errors=True):
     """
     Identify the email service provider of a large set of domains or emails, caching to avoid
-    repeat queries.
+    repeat queries. Returns a generator that yields one item at a time
 
-    >>> sorted(mxbulksniff(['example.com', 'google.com', 'http://www.google.com']).items())
+    >>> list(mxbulksniff(['example.com', 'google.com', 'http://www.google.com']))
     [('example.com', None), ('google.com', 'google-apps'), ('http://www.google.com', 'google-apps')]
     """
     domain_cache = {}
-    results = {}
     for i in items:
         domain = get_domain(i)
-        results[i] = domain_cache[domain] if domain in domain_cache else mxsniff(domain, verbose, ignore_errors)
-    return results
+        yield i, domain_cache[domain] if domain in domain_cache else mxsniff(domain, verbose, ignore_errors)
+
+
+def main_internal(args, name='mxsniff'):
+    """
+    Console script
+
+    >>> main_internal(['example@gmail.com'])
+    example@gmail.com: google-gmail
+    """
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog=name,
+        description='Identify email service providers given an email address, URL or domain name',
+        fromfile_prefix_chars='@')
+    parser.add_argument('names', metavar='email_or_url', nargs='+',
+        help="email or URL to look up; use @filename to load from a file")
+    parser.add_argument('-v', '--verbose', action='store_true',
+        help="show both provider name and mail server names")
+    parser.add_argument('-i', '--ignore-errors', action='store_true',
+        help="ignore DNS lookup errors and continue with next item")
+    args = parser.parse_args(args)
+    for item, provider in mxbulksniff(args.names, verbose=args.verbose, ignore_errors=args.ignore_errors):
+        print "{item}: {provider}".format(item=item, provider=provider)
+
+
+def main():
+    import os.path
+    return main_internal(sys.argv[1:], os.path.basename(sys.argv[0]))
+
+if __name__ == '__main__':
+    sys.exit(main())
