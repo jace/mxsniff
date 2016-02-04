@@ -17,12 +17,78 @@ from .providers import providers
 
 __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
+_value = ()  # Used in WildcardDomainDict as a placeholder
 
-provider_domains = {}
+
+class WildcardDomainDict(object):
+    """
+    Like a dict, but with custom __getitem__ and __setitem__ to make a nested dictionary
+    with wildcard support for domain name mappings.
+
+    >>> d = WildcardDomainDict()
+    >>> d
+    WildcardDomainDict({})
+    >>> d['*.example.com'] = 'example-wildcard'
+    >>> d['*.wildcard.example.com.'] = 'example-subdotted'
+    >>> d['example.com'] = 'example'
+    >>> d['www.example.com'] = 'example-www'
+    >>> d['example.com']
+    'example'
+    >>> d['www.example.com']
+    'example-www'
+    >>> d['wildcard.example.com']
+    'example-wildcard'
+    >>> d['sub.wildcard.example.com']
+    'example-subdotted'
+    """
+    def __init__(self, *args, **kwargs):
+        self.tree = dict(*args, **kwargs)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + repr(self.tree) + ')'
+
+    def _makeparts(self, key):
+        parts = key.lower().split('.')
+        while '' in parts:
+            parts.remove('')  # Handle trailing dot
+        return parts[::-1]
+
+    def __setitem__(self, key, value):
+        parts = self._makeparts(key)
+        tree = self.tree
+        for item in parts:
+            if item not in tree:
+                tree[item] = {}
+            tree = tree[item]
+        tree[_value] = value
+
+    def __getitem__(self, key):
+        parts = self._makeparts(key)
+        length = len(parts)
+        tree = self.tree
+        for counter, item in enumerate(parts):
+            last = counter == length - 1
+            if item in tree and (not last or last and _value in tree[item]):
+                tree = tree[item]
+            elif '*' in tree:
+                tree = tree['*']
+        if _value in tree:
+            return tree[_value]
+        else:
+            raise KeyError(key)
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
+provider_domains = WildcardDomainDict()
 
 for name, data in providers.items():
     for domain in data['mx']:
-        provider_domains[domain.lower()] = name
+        provider_domains[domain] = name
 
 
 class MXLookupException(Exception):
@@ -77,10 +143,9 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
         answers = sorted([(rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
             for rdata in dns.resolver.query(domain, 'MX')])
         for preference, exchange in answers:
-            if exchange in provider_domains:
-                provider = provider_domains[exchange]
-                if provider not in result:
-                    result.append(provider)
+            provider = provider_domains.get(exchange)
+            if provider and provider not in result:
+                result.append(provider)
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
         pass
     except dns.exception.DNSException as e:

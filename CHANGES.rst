@@ -1,6 +1,8 @@
 0.2.2
 =====
 
+* Added support for wildcards in domain names
+
 0.2.1
 =====
 
