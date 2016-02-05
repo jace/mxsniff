@@ -8,61 +8,87 @@ __all__ = ['providers']
 
 # NOTE: Please add new providers and MX servers in alphabetic order
 providers = {
+    '1and1': {'mx': [
+        '*.1and1.com',
+        ]},
+    'amazon-aws': {'mx': [
+        'inbound-smtp.*.amazonaws.com',
+        ]},
+    'amazon-aws-ec2': {'mx': [
+        '*.*.compute.amazonaws.com',
+        ]},
+    'apple-icloud': {'mx': [
+        '*.mail.icloud.com',
+        ]},
     'dreamhost': {'mx': [
-        'mx1.sub4.homie.mail.dreamhost.com',
-        'mx2.sub4.homie.mail.dreamhost.com',
-    ]},
-    'godaddy-us': {'mx': [
+        '*.mail.dreamhost.com',
+        '*.*.mail.dreamhost.com',
+        '*.*.*.mail.dreamhost.com',
+        ]},
+    'emailsrvr': {'mx': [
+        '*.emailsrvr.com',
+        ]},
+    'fatcow': {'mx': [
+        'mail.fatcow.com',
+        ]},
+    'gandi': {'mx': [
+        'mail.gandi.net',
+        ]},
+    'godaddy': {'mx': [
         'mailstore1.secureserver.net',
         'smtp.secureserver.net',
-    ]},
-    'godaddy-eu': {'mx': [
         'mailstore1.europe.secureserver.net',
         'smtp.europe.secureserver.net',
-    ]},
-    'godaddy-as': {'mx': [
         'mailstore1.asia.secureserver.net',
         'smtp.asia.secureserver.net',
-    ]},
+        ]},
     'google-gmail': {'mx': [
-        'alt1.gmail-smtp-in.l.google.com',
-        'alt2.gmail-smtp-in.l.google.com',
-        'alt3.gmail-smtp-in.l.google.com',
-        'alt4.gmail-smtp-in.l.google.com',
         'gmail-smtp-in.l.google.com',
-    ]},
+        '*.gmail-smtp-in.l.google.com',
+        ]},
     'google-apps': {'mx': [
         'aspmx.l.google.com',
-        'alt1.aspmx.l.google.com',
-        'alt2.aspmx.l.google.com',
-        'alt3.aspmx.l.google.com',
-        'alt4.aspmx.l.google.com',
-    ]},
-    'icloud-me': {'mx': [
-        'mx1.mail.icloud.com',
-        'mx2.mail.icloud.com',
-        'mx3.mail.icloud.com',
-        'mx4.mail.icloud.com',
-        'mx5.mail.icloud.com',
-        'mx6.mail.icloud.com',
-    ]},
+        '*.aspmx.l.google.com',
+        ]},
+    'mailhostbox': {'mx': [
+        '*.mailhostbox.com',
+        ]},
+    'netmagic': {'mx': [
+        '*.netmagicians.com',
+        ]},
+    'one.com': {'mx': [
+        '*.one.com'
+        ]},
+    'outlook-bizmail': {'mx': [
+        '*.mail.*.outlook.com',
+        ]},
     'outlook-hotmail': {'mx': [
-        'mx1.hotmail.com',
-        'mx2.hotmail.com',
-        'mx3.hotmail.com',
-        'mx4.hotmail.com',
-    ]},
+        '*.hotmail.com',
+        ]},
     'pobox': {'mx': [
-        'pb-mx1.pobox.com',
-        'pb-mx2.pobox.com',
-        'pb-mx3.pobox.com',
-        'pb-mx4.pobox.com',
-        'pb-mx5.pobox.com',
-        'pb-mx8.pobox.com',
-    ]},
+        '*.pobox.com',
+        ]},
+    'proofpoint': {'mx': [
+        '*.*.pphosted.com',
+        ]},
     'rediffmail': {'mx': [
         'mx.rediffmail.rediff.akadns.net',
-    ]},
+        ]},
+    'rediffmail-pro': {'mx': [
+        'mail.rediffmailpro.com',
+        ]},
+    'servage': {'mx': [
+        '*.servage.net',
+        ]},
+    'siteground': {'mx': [
+        'mailspamprotection.com',
+        ]},
+    'symantec-messagelabs': {'mx': [
+        '*.*.messagelabs.com',
+        ]},
+    'webfaction': {'mx': [
+        '*.webfaction.com'
+        ]},
     'yahoo-mail': {'mx': [
         'mta5.am0.yahoodns.net',
         'mta6.am0.yahoodns.net',
@@ -73,20 +99,16 @@ providers = {
         'mx2.mail.yahoo.co.jp',
         'mx3.mail.yahoo.co.jp',
         'mx5.mail.yahoo.co.jp',
-    ]},
+        ]},
     'yahoo-bizmail': {'mx': [
         'mx-biz.mail.am0.yahoodns.net',
-    ]},
+        'mx-indiabiz.mail.gm0.yahoodns.net',
+        ]},
     'yandex': {'mx': [
         'mx.yandex.ru',
-    ]},
-    'zoho-mail': {'mx': [
-        'mx.zoho.com',
-        'mx2.zoho.com',
-    ]},
-    'zoho-personal': {'mx': [
-        'smtpin.zoho.com',
-        'smtpin2.zoho.com',
-        'mx3.zoho.com',
-    ]},
+        ]},
+    'zoho': {'mx': [
+        '*.zoho.com',
+        '*.zohomail.com',
+        ]},
 }
