@@ -126,7 +126,9 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
     :return: Identified service provider, or a list if there's more than one (in unusual circumstances)
 
     >>> mxsniff('example.com')
+    'nomx'
     >>> mxsniff('__invalid_domain_name__.com')
+    'nomx'
     >>> mxsniff('example@gmail.com')
     'google-gmail'
     >>> mxsniff('https://google.com/')
@@ -155,12 +157,23 @@ def mxsniff(email_or_domain, verbose=False, ignore_errors=False):
             raise MXLookupException('{exc} {error} ({domain})'.format(
                 exc=e.__class__.__name__, error=text_type(e), domain=domain))
 
+    if not result:
+        # Check for self-hosted email servers, identified with the label 'self'
+        rdomain = tldextract.extract(domain).registered_domain
+        for preference, exchange in answers:
+            if tldextract.extract(exchange).registered_domain == rdomain:
+                result.append('self')
+                break
+        if not result:
+            if answers:
+                result.append('unknown')  # We don't know this one's provider
+            else:
+                result.append('nomx')  # This domain has no mail servers
+
     if verbose:
         return {'name': email_or_domain, 'match': result, 'mx': answers}
     else:
-        if len(result) == 0:
-            return None
-        elif len(result) == 1:
+        if len(result) == 1:
             return result[0]
         else:
             return result
@@ -172,7 +185,7 @@ def mxbulksniff(items, verbose=False, ignore_errors=True):
     repeat queries. Returns a generator that yields one item at a time
 
     >>> list(mxbulksniff(['example.com', 'google.com', 'http://www.google.com']))
-    [('example.com', None), ('google.com', 'google-apps'), ('http://www.google.com', 'google-apps')]
+    [('example.com', 'nomx'), ('google.com', 'google-apps'), ('http://www.google.com', 'google-apps')]
     """
     domain_cache = {}
     for i in items:

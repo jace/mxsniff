@@ -3,6 +3,7 @@
 
 * Added support for wildcards in domain names
 * Additional providers
+* Detect self-hosted email servers
 
 0.2.1
 =====
