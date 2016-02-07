@@ -279,6 +279,9 @@ providers = {
     'salushosting': {'mx': [
         'mail.salushosting.com',
         ]},
+    'sendgrid': {'mx': [
+        'mx.sendgrid.net'
+        ]},
     'servage': {'mx': [
         '*.servage.net',
         ]},
