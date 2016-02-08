@@ -279,6 +279,9 @@ providers = {
     'salushosting': {'mx': [
         'mail.salushosting.com',
         ]},
+    'sendgrid': {'mx': [
+        'mx.sendgrid.net'
+        ]},
     'servage': {'mx': [
         '*.servage.net',
         ]},
@@ -322,6 +325,7 @@ providers = {
     'yahoo-mail': {'mx': [
         '*.am0.yahoodns.net',
         '*.mail.*.yahoodns.net',
+        '*.mail.yahoo.co.jp'
         ]},
     'yandex': {'mx': [
         'mx.yandex.net',
