@@ -121,9 +121,6 @@ providers = {
         '*.*.*.psmtp.com',
         '*.*.*.*.psmtp.com',
         ]},
-    'h-email': {'mx': [
-        'mail.h-email.net',
-        ]},
     'hostcentral': {'mx': [
         '*.hostcentral.net',
         ]},
@@ -179,9 +176,6 @@ providers = {
     'mochahost': {'mx': [
         '*.mochahost.com',
         ]},
-    'mxproc': {'mx': [
-        'mail.mxproc.com',
-        ]},
     'mxroute': {'mx': [
         '*.mxroute.com',
         ]},
@@ -235,6 +229,12 @@ providers = {
         ]},
     'poponline': {'mx': [
         '*.pop.co',
+        ]},
+    'private-h-email': {'mx': [
+        'mail.h-email.net',
+        ]},
+    'private-mxproc': {'mx': [
+        'mail.mxproc.com',
         ]},
     'private-nickstel': {'mx': [
         'mail.nickstel.com',

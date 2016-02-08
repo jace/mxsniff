@@ -13,21 +13,22 @@ MX Sniff identifies well known email service providers given
 an email address or a domain name. Use this to find out how many
 users in your email database are Gmail users (via Google Apps).
 
+To install, get it from PyPI::
+
+    $ pip install mxsniff
+
+Or get the development branch direct from GitHub::
+
+    $ pip install https://github.com/jace/mxsniff/archive/master.zip
+
 Command line usage::
 
-    $ mxsniff example.com gmail.com
+    $ mxsniff example.com gmail.com example@gmail.com https://www.google.com
     $ mxsniff -v example.com
-    $ mxsniff @filename
+    $ mxsniff @filename_with_list_of_domains_or_emails_or_urls
 
 Python usage::
 
     >>> from mxsniff import mxsniff, mxbulksniff
-    >>> mxsniff('example@gmail.com')
-    'google-gmail'
-    >>> mxsniff('https://google.com/')
-    'google-apps'
-    >>> mxsniff('google.com', verbose=True)
-    {'match': ['google-apps'], 'mx': [(10, 'aspmx.l.google.com'), (20, 'alt1.aspmx.l.google.com'), (30, 'alt2.aspmx.l.google.com'), (40, 'alt3.aspmx.l.google.com'), (50, 'alt4.aspmx.l.google.com')], 'name': 'google.com'}
-
-    >>> list(mxbulksniff(['example.com', 'google.com', 'http://www.google.com']))
-    [('example.com', None), ('google.com', 'google-apps'), ('http://www.google.com', 'google-apps')]
+    >>> mxsniff('google.com')
+    >>> mxbulksniff(['example.com', 'google.com'])  # Returns a generator with one result at a time

@@ -1,4 +1,7 @@
-0.2.2
+0.3.1
+=====
+
+0.3.0
 =====
 
 * Added support for wildcards in domain names
@@ -6,7 +9,7 @@
 * Detect self-hosted email servers
 * Remove verbose mode in the mxsniff function; always verbose now
 * Track MX TLDs
-* In the command line version, run queries in a multiprocess pool
+* Run queries in a multiprocess pool in the command line version
 
 0.2.1
 =====
