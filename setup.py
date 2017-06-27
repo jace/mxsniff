@@ -9,7 +9,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 if sys.version_info.major == 2:
     README = unicode(README, 'utf-8')
     CHANGES = unicode(CHANGES, 'utf-8')
-versionfile = open(os.path.join(here, "mxsniff", "_version.py")).read()
+versionfile = open(os.path.join(here, 'mxsniff', '_version.py')).read()
 
 mo = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]", versionfile, re.M)
 if mo:
@@ -28,6 +28,7 @@ setup(name='mxsniff',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',

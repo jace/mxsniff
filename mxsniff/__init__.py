@@ -215,7 +215,7 @@ def main_internal(args, name='mxsniff'):
 
     parser = argparse.ArgumentParser(
         prog=name,
-        description='Identify email service providers given an email address, URL or domain name',
+        description="Identify email service providers given an email address, URL or domain name",
         fromfile_prefix_chars='@')
     parser.add_argument('names', metavar='email_or_url', nargs='+',
         help="email or URL to look up; use @filename to load from a file")

@@ -6,12 +6,15 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
   - "pypy"
 # command to install dependencies
 install:
   - python setup.py develop
   - pip install nose coverage coveralls
-script: coverage run `which nosetests`
+script:
+  - coverage run `which nosetests`
+  - coverage report -m
 after_success:
   - coveralls
 notifications:
