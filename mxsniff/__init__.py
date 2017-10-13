@@ -4,8 +4,9 @@
 MX Sniffer identifies common email service providers given an email address or a domain name.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import sys
+from functools import partial
 from six import text_type
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
@@ -13,7 +14,7 @@ import dns.resolver
 import tldextract
 
 from ._version import __version__, __version_info__  # NOQA
-from .providers import providers
+from .providers import providers as all_providers, public_domains
 
 __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
@@ -84,11 +85,15 @@ class WildcardDomainDict(object):
             return default
 
 
-provider_domains = WildcardDomainDict()
+provider_mx = WildcardDomainDict()
+provider_domains = {}
 
-for name, data in providers.items():
+for name, data in all_providers.items():
     for domain in data['mx']:
-        provider_domains[domain] = name
+        provider_mx[domain] = name
+    if 'domains' in data:
+        for domain in data['domains']:
+            provider_domains[domain] = name
 del name, data, domain
 
 
@@ -115,16 +120,32 @@ def get_domain(email_or_domain):
         domain = tldextract.extract(urlparse(email_or_domain).netloc.split(':')[0]).registered_domain
     else:
         domain = email_or_domain.strip()
-    return domain
+    return domain.lower()
 
 
-def mxsniff(email_or_domain, ignore_errors=False, cache=None):
+def provider_info(provider):
+    """
+    Return a copy of the provider dict with only public fields
+    """
+    if provider in all_providers:
+        return {
+            'title': all_providers[provider].get('title'),
+            'note': all_providers[provider].get('note'),
+            'url': all_providers[provider].get('url'),
+            'public': all_providers[provider].get('public', False),
+            }
+
+
+def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_static_domains=True):
     """
     Lookup MX records for a given email address, URL or domain name and identify the email service provider(s)
     from an internal list of known service providers.
 
     :param str email_or_domain: Email, domain or URL to lookup
-    :return: Identified service provider, or a list if there's more than one (in unusual circumstances)
+    :param bool ignore_errors: Fail silently if there's a DNS lookup error
+    :param dict cache: Cache with a dictionary interface to avoid redundant lookups
+    :return: Matching domain, MX servers, and identified service provider(s)
+    :raises MXLookupException: If a DNS lookup error happens and ``ignore_errors`` is False
 
     >>> mxsniff('example.com')['match']
     ['nomx']
@@ -132,47 +153,71 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None):
     ['nomx']
     >>> mxsniff('example@gmail.com')['match']
     ['google-gmail']
-    >>> sorted(mxsniff('https://google.com/').items())
-    [('domain', 'google.com'), ('match', ['google-apps']), ('mx', [(10, 'aspmx.l.google.com'), (20, 'alt1.aspmx.l.google.com'), (30, 'alt2.aspmx.l.google.com'), (40, 'alt3.aspmx.l.google.com'), (50, 'alt4.aspmx.l.google.com')]), ('mx_tld', ['google.com']), ('query', 'https://google.com/')]
+    >>> sorted(mxsniff('https://google.com/').keys())
+    ['domain', 'match', 'mx', 'providers', 'public', 'query']
     """
     domain = get_domain(email_or_domain)
     if cache and domain in cache:
         return cache[domain]
 
-    result = []
+    #: Providers that matched
+    matches = []
+    #: Info on matching providers (title, note, url, public)
+    rproviders = []
+    #: Top-level of MX domain (used to detect self-hosted email)
     tld = []
+    #: Default return value for MX in case an error occurs and is ignored
+    mx_answers = []
 
-    try:
-        answers = []  # Default value in case of verbose mode where an error occurs
-        answers = sorted([(rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
-            for rdata in dns.resolver.query(domain, 'MX')])
-        for preference, exchange in answers:
-            rdomain = tldextract.extract(exchange).registered_domain
-            if rdomain not in tld:
-                tld.append(rdomain)
-            provider = provider_domains.get(exchange)
-            if provider and provider not in result:
-                result.append(provider)
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
-        pass
-    except dns.exception.DNSException as e:
-        if ignore_errors:
+    if use_static_domains and domain in provider_domains:
+        matches.append(provider_domains[domain])
+        rproviders.append(provider_info(provider_domains[domain]))
+    else:
+        try:
+            # Use a DNS resolver with custom timeout
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = timeout
+            resolver.lifetime = timeout
+            # Get answers, sorted by MX preference
+            mx_answers = sorted([(rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
+                for rdata in resolver.query(domain, 'MX')])
+            for preference, exchange in mx_answers:
+                # Extract the top-level domain for testing for self-hosted email later
+                rdomain = tldextract.extract(exchange).registered_domain
+                if rdomain not in tld:
+                    tld.append(rdomain)
+                # Check if the provider is known from the MX record
+                provider = provider_mx.get(exchange)
+                if provider and provider not in matches:
+                    matches.append(provider)
+                    rproviders.append(provider_info(provider))
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
             pass
-        else:
-            raise MXLookupException('{exc} {error} ({domain})'.format(
-                exc=e.__class__.__name__, error=text_type(e), domain=domain))
+        except dns.exception.DNSException as e:
+            if ignore_errors:
+                pass
+            else:
+                raise MXLookupException('{exc} {error} ({domain})'.format(
+                    exc=e.__class__.__name__, error=text_type(e), domain=domain))
 
-    if not result:
+    if not matches:
         # Check for self-hosted email servers; identify them with the label 'self'
         if tldextract.extract(domain).registered_domain in tld:
-            result.append('self')
-        if not result:
-            if answers:
-                result.append('unknown')  # We don't know this one's provider
+            matches.append('self')
+        if not matches:
+            if mx_answers:
+                matches.append('unknown')  # We don't know this one's provider
             else:
-                result.append('nomx')  # This domain has no mail servers
+                matches.append('nomx')  # This domain has no mail servers
 
-    result = {'query': email_or_domain, 'domain': domain, 'match': result, 'mx': answers, 'mx_tld': tld}
+    result = {
+        'query': email_or_domain,
+        'domain': domain,
+        'match': matches,
+        'mx': mx_answers,
+        'providers': rproviders,
+        'public': domain in public_domains or any([p['public'] for p in rproviders])
+        }
     if cache:
         cache[domain] = result
     return result
@@ -191,17 +236,6 @@ def mxbulksniff(items, ignore_errors=True):
         yield mxsniff(i, ignore_errors, cache)
 
 
-def multiprocess_mxsniff(email_or_domain, ignore_errors=True):
-    """
-    mxsniff wrapper that converts a KeyboardInterrupt into an Exception. Required because
-    of Python bug #8296: http://bugs.python.org/issue8296
-    """
-    try:
-        return mxsniff(email_or_domain, ignore_errors)
-    except KeyboardInterrupt:
-        raise Exception("KeyboardInterrupt")
-
-
 def main_internal(args, name='mxsniff'):
     """
     Console script
@@ -211,7 +245,7 @@ def main_internal(args, name='mxsniff'):
     """
     import argparse
     import json
-    from multiprocessing import Pool
+    from multiprocessing.dummy import Pool
 
     parser = argparse.ArgumentParser(
         prog=name,
@@ -223,18 +257,30 @@ def main_internal(args, name='mxsniff'):
         help="show both provider name and mail server names")
     parser.add_argument('-i', '--ignore-errors', action='store_true',
         help="ignore DNS lookup errors and continue with next item")
+    parser.add_argument('-t', '--timeout', type=int, metavar='T', default=30,
+        help="DNS timeout in seconds (default: %(default)s)")
     args = parser.parse_args(args)
 
+    # Assume non-Unicode names to be in UTF-8
+    names = [n.decode('utf-8') if not isinstance(n, text_type) else n for n in args.names]
+
     pool = Pool(processes=10)
-    it = pool.imap(multiprocess_mxsniff, args.names, 10)
+    it = pool.imap_unordered(
+        partial(mxsniff,
+            ignore_errors=args.ignore_errors,
+            timeout=args.timeout,
+            use_static_domains=False),
+        names,
+        10)
     try:
         for result in it:
             if args.verbose:
                 print(json.dumps(result)) + ','
             else:
-                print("{item}: {provider}".format(item=result['query'], provider=', '.join(result['match'])))
+                print(u"{item}: {provider}".format(item=result['query'], provider=', '.join(result['match'])))
     except KeyboardInterrupt:
         pool.terminate()
+        raise
 
 
 def main():

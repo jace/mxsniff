@@ -43,7 +43,7 @@ setup(name='mxsniff',
     include_package_data=True,
     zip_safe=True,
     test_suite='tests',
-    install_requires=['six', 'tldextract', 'dnspython' if sys.version_info.major == 2 else 'dnspython3'],
+    install_requires=['six', 'tldextract', 'dnspython'],
     entry_points={
         'console_scripts': [
             'mxsniff = mxsniff:main',

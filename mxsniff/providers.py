@@ -4,10 +4,20 @@
 Known email providers and their MX domains.
 """
 
-__all__ = ['providers']
+__all__ = ['providers', 'public_domains']
+
 
 # NOTE: Please add new providers and MX servers in alphabetic order.
-# The labels `self`, `unknown` and `nomx` are reserved. Don't add them here
+# The labels `self`, `unknown` and `nomx` are reserved. Don't add them here.
+# Provider names are identifiers and should never change, even if the holding
+# entity has changed. Update the title instead.
+# Keys:
+#   mx: List of MX servers. The * wildcard is supported
+#   domains: Well known email domains for this provider (optional)
+#   title: Title of this provider (optional)
+#   note: Explanatory note for this provider (optional)
+#   url: Public URL for this provider's services (optional)
+#   public: Indicates a provider of public email domains (optional, default False)
 providers = {
     'i-3.com': {'mx': [
         '*.*.bak-mx.*.smtproutes.com',
@@ -34,7 +44,11 @@ providers = {
         ]},
     'apple-icloud': {'mx': [
         '*.mail.icloud.com',
-        ]},
+        ],
+        'title': "Apple iCloud",
+        'domains': ['icloud.com', 'mac.com', 'me.com'],
+        'public': True,
+        },
     'appriver': {'mx': [
         '*.*.*.arsmtp.com',
         '*.*.*.*.arsmtp.com',
@@ -78,12 +92,22 @@ providers = {
     'enom': {'mx': [
         '*.registrar-servers.com',
         ]},
+    'everyone.net': {'mx': [
+        '*.everyone.net',
+        ]},
     'exclusivehosting': {'mx': [
         '*.exclusivehosting.net',
         ]},
     'fakemailgenerator': {'mx': [
         '*.fakemailgenerator.com',
-        ]},
+        ],
+        'public': True,
+        },
+    'fastmail': {'mx': [
+        '*.messagingengine.com',
+        ],
+        'public': True,
+        },
     'fatcow': {'mx': [
         'mail.fatcow.com',
         ]},
@@ -99,7 +123,12 @@ providers = {
         ]},
     'gmx.com': {'mx': [
         '*.gmx.com',
-        ]},
+        '*.gmx.net',
+        ],
+        'title': "GMX 1&1 Mail and Media",
+        'domains': ['gmx.com', 'gmx.us'],
+        'public': True,
+        },
     'godaddy': {'mx': [
         'mailstore1.secureserver.net',
         'smtp.secureserver.net',
@@ -111,7 +140,11 @@ providers = {
     'google-gmail': {'mx': [
         'gmail-smtp-in.l.google.com',
         '*.gmail-smtp-in.l.google.com',
-        ]},
+        ],
+        'title': "Gmail",
+        'domains': ['gmail.com', 'googlemail.com'],
+        'public': True,
+        },
     'google-apps': {'mx': [
         'aspmx.l.google.com',
         '*.aspmx.l.google.com',
@@ -120,9 +153,15 @@ providers = {
         '*.gmr-smtp-in.l.google.com',
         '*.*.*.psmtp.com',
         '*.*.*.*.psmtp.com',
-        ]},
+        ],
+        'title': "G Suite"
+        },
     'hostcentral': {'mx': [
         '*.hostcentral.net',
+        ]},
+    'hostedemail': {'mx': [
+        'mx.*.*.*.hostedemail.com',
+        'mx.*.*.*.*.hostedemail.com',
         ]},
     'hostignition': {'mx': [
         '*.ignitionserver.net',
@@ -136,6 +175,11 @@ providers = {
     'ifastnet': {'mx': [
         'mx.byethost3.com',
         ]},
+    'inbox.com': {'mx': [
+        '*.inbox.com',
+        ],
+        'public': True,
+        },
     'intermedia': {'mx': [
         '*.intermedia.net',
         ]},
@@ -154,12 +198,25 @@ providers = {
     'logix': {'mx': [
         '*.logix.in',
         ]},
+    'mail.com': {'mx': [
+        '*.mail.com',
+        ],
+        'title': "Mail.com, a 1&1 company",
+        'public': True,
+        },
     'mailchimp-mandrill': {'mx': [
         '*.*.mandrillapp.com',
         ]},
     'mailhostbox': {'mx': [
         '*.mailhostbox.com',
         ]},
+    'mailinator': {'mx': [
+        '*.mailinator.com',
+        'mx.powered.name',
+        ],
+        'title': "Mailinator",
+        'public': True,
+        },
     'mailgun': {'mx': [
         '*.mailgun.org',
         ]},
@@ -169,6 +226,9 @@ providers = {
         ]},
     'megamailservers': {'mx': [
         '*.megamailservers.com',
+        ]},
+    'migadu': {'mx': [
+        '*.migadu.com',
         ]},
     'mimecast': {'mx': [
         '*.mimecast.com',
@@ -211,7 +271,11 @@ providers = {
         ]},
     'outlook-hotmail': {'mx': [
         '*.hotmail.com',
-        ]},
+        ],
+        'title': "Outlook Hotmail",
+        'domains': ['hotmail.com', 'msn.com', 'outlook.co', 'outlook.com', 'live.com', 'live.in'],
+        'public': True,
+        },
     'ovh': {'mx': [
         '*.ovh.net',
         ]},
@@ -255,12 +319,21 @@ providers = {
         '*.pphosted.com',
         '*.*.pphosted.com',
         ]},
+    'protonmail': {'mx': [
+        '*.protonmail.ch',
+        ],
+        'title': "Protonmail",
+        'domains': ['protonmail.com', 'protonmail.ch'],
+        'public': True,
+        },
     'qq': {'mx': [
         '*.qq.com',
         ]},
     'rediffmail': {'mx': [
         'mx.rediffmail.rediff.akadns.net',
-        ]},
+        ],
+        'public': True,
+        },
     'rediffmail-pro': {'mx': [
         'mail.rediffmailpro.com',
         ]},
@@ -326,11 +399,19 @@ providers = {
         '*.am0.yahoodns.net',
         '*.mail.*.yahoodns.net',
         '*.mail.yahoo.co.jp'
-        ]},
+        ],
+        'title': "Yahoo Mail",
+        'domains': ['rocketmail.com', 'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'ymail.com'],
+        'public': True
+        },
     'yandex': {'mx': [
         'mx.yandex.net',
         'mx.yandex.ru',
-        ]},
+        ],
+        'title': "Yandex",
+        'domains': ['yandex.com', 'yandex.ru'],
+        'public': True,
+        },
     'yodns': {'mx': [
         '*.yodns.com',
         ]},
@@ -340,5 +421,39 @@ providers = {
     'zoho': {'mx': [
         '*.zoho.com',
         '*.zohomail.com',
-        ]},
-}
+        ],
+        'title': "Zoho",
+        'note': "Zoho provides both a public webmail service and custom domain hosting with the same MX servers",
+        },
+    }
+
+
+# This is a non-exhaustive list of popular public email domains.
+# It complements the 'public' email provider flag and whitelists
+# domains when the same provider also has non-public hosting, notably
+# 'zoho' with zoho.com.
+public_domains = {
+    'gmail.com',
+    'googlemail.com',
+    'hotmail.com',
+    'icloud.com',
+    'live.com',
+    'live.in',
+    'mac.com',
+    'mailinator.com',
+    'me.com',
+    'msn.com',
+    'outlook.co',
+    'outlook.com',
+    'protonmail.ch',
+    'protonmail.com',
+    'rocketmail.com',
+    'yahoo.co.in',
+    'yahoo.co.uk',
+    'yahoo.com',
+    'yahoo.com',
+    'yandex.com',
+    'yandex.ru',
+    'ymail.com',
+    'zoho.com',
+    }
