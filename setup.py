@@ -43,7 +43,7 @@ setup(name='mxsniff',
     include_package_data=True,
     zip_safe=True,
     test_suite='tests',
-    install_requires=['six', 'tldextract', 'dnspython'],
+    install_requires=['six', 'tldextract', 'dnspython', 'pyIsEmail'],
     entry_points={
         'console_scripts': [
             'mxsniff = mxsniff:main',

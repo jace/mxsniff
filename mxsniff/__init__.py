@@ -7,11 +7,13 @@ MX Sniffer identifies common email service providers given an email address or a
 from __future__ import absolute_import, print_function
 import sys
 from functools import partial
-from six import text_type
+from six import text_type, string_types
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
+import smtplib
 import dns.resolver
 import tldextract
+from pyisemail import is_email
 
 from ._version import __version__, __version_info__  # NOQA
 from .providers import providers as all_providers, public_domains
@@ -144,6 +146,8 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
     :param str email_or_domain: Email, domain or URL to lookup
     :param bool ignore_errors: Fail silently if there's a DNS lookup error
     :param dict cache: Cache with a dictionary interface to avoid redundant lookups
+    :param int timeout: Timeout in seconds
+    :param bool use_static_domains: Speed up lookups by using the static domain list in the provider database
     :return: Matching domain, MX servers, and identified service provider(s)
     :raises MXLookupException: If a DNS lookup error happens and ``ignore_errors`` is False
 
@@ -223,6 +227,69 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
     return result
 
 
+def mxprobe(email, mx, your_email, hostname=None, timeout=30):
+    """
+    Probe an email address at an MX server
+
+    :param str email: Email address to be probed
+    :param mx: MX server(s) to do the test at; will be tried in order until one is available
+    :param your_email: Your email address, to perform the probe
+    :param hostname: Optional hostname to perform the probe with
+    :return: 2-tuple, one of ('invalid', None), not an email address, ('error', message), probe error,
+        ('fail', reason), email doesn't exist, or ('pass', reason), email may exist
+
+    >>> mxprobe('jackerhack@gmail.com', 'gmail-smtp-in.l.google.com', 'example@example.com')[0]
+    'pass'
+    >>> mxprobe('foo@gmail.com', 'gmail-smtp-in.l.google.com', 'example@example.com')[0]
+    'fail'
+    >>> mxprobe('example@example.com', [], 'example@example.com', timeout=5)[0]
+    'error'
+    >>> mxprobe('example.com', [], 'example@example.com')[0]
+    'invalid'
+    """
+    if not hostname:
+        hostname = 'probe.' + your_email.split('@', 1)[-1].strip()
+    email = parseaddr(email)[1]
+    if not is_email(email):
+        return ('invalid', None)
+    if not mx:
+        mx = [email.split('@', 1)[-1].strip()]
+    if isinstance(mx, string_types):
+        mx = [mx]
+    error_msg = None
+    for mxserver in mx:
+        probe_result = None
+        try:
+            smtp = smtplib.SMTP(mxserver, 25, hostname, timeout)
+            smtp.ehlo_or_helo_if_needed()
+            code, msg = smtp.mail(your_email)
+            if code != 250:
+                error_msg = msg
+                continue
+            code, msg = smtp.rcpt(email)
+            if code == 250:
+                probe_result = ('pass', msg)
+            elif code == 550:
+                probe_result = ('fail', msg)
+            else:  # Unknown code
+                error_msg = msg
+        except smtplib.SMTPException as e:
+            error_msg = text_type(e)
+            continue
+        # Probe complete. Quit the connection, ignoring errors
+        try:
+            smtp.rset()
+            smtp.quit()
+        except smtplib.SMTPException:  # pragma: no cover
+            pass
+        # Did we get a result? Return it
+        if probe_result is not None:
+            return probe_result
+        # If no result, continue to the next MX server
+
+    return ('error', error_msg)  # We couldn't talk to any MX server
+
+
 def mxbulksniff(items, ignore_errors=True):
     """
     Identify the email service provider of a large set of domains or emails, caching to avoid
@@ -236,12 +303,26 @@ def mxbulksniff(items, ignore_errors=True):
         yield mxsniff(i, ignore_errors, cache)
 
 
+def mxsniff_and_probe(email_or_domain, probe_email, timeout=30, **kwargs):
+    """
+    Combine :func:`mxsniff` and :func:`mxprobe` into a single result
+    """
+    result = mxsniff(email_or_domain, timeout=timeout, **kwargs)
+    if probe_email:
+        result['probe'] = mxprobe(email_or_domain, [mx[1] for mx in result['mx']], probe_email, timeout=timeout)
+    return result
+
+
 def main_internal(args, name='mxsniff'):
     """
     Console script
 
     >>> main_internal(['example@gmail.com'])
     example@gmail.com: google-gmail
+    >>> main_internal(['example@gmail.com', '-p', 'example@gmail.com'])
+    example@gmail.com: fail
+    >>> main_internal(['example.com', '-v'])
+    {"domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"},
     """
     import argparse
     import json
@@ -254,11 +335,13 @@ def main_internal(args, name='mxsniff'):
     parser.add_argument('names', metavar='email_or_url', nargs='+',
         help="email or URL to look up; use @filename to load from a file")
     parser.add_argument('-v', '--verbose', action='store_true',
-        help="show both provider name and mail server names")
+        help="return verbose results in JSON")
     parser.add_argument('-i', '--ignore-errors', action='store_true',
         help="ignore DNS lookup errors and continue with next item")
     parser.add_argument('-t', '--timeout', type=int, metavar='T', default=30,
         help="DNS timeout in seconds (default: %(default)s)")
+    parser.add_argument('-p', '--probe', metavar='your_email', default=None,
+        help="probe whether target email address exists (needs your email to perform the test)")
     args = parser.parse_args(args)
 
     # Assume non-Unicode names to be in UTF-8
@@ -266,7 +349,8 @@ def main_internal(args, name='mxsniff'):
 
     pool = Pool(processes=10)
     it = pool.imap_unordered(
-        partial(mxsniff,
+        partial(mxsniff_and_probe,
+            probe_email=args.probe,
             ignore_errors=args.ignore_errors,
             timeout=args.timeout,
             use_static_domains=False),
@@ -275,15 +359,18 @@ def main_internal(args, name='mxsniff'):
     try:
         for result in it:
             if args.verbose:
-                print(json.dumps(result)) + ','
+                print(json.dumps(result, sort_keys=True), ',', sep='')
             else:
-                print(u"{item}: {provider}".format(item=result['query'], provider=', '.join(result['match'])))
-    except KeyboardInterrupt:
+                if args.probe:
+                    print(u"{item}: {probe}".format(item=result['query'], probe=result['probe'][0]))
+                else:
+                    print(u"{item}: {provider}".format(item=result['query'], provider=', '.join(result['match'])))
+    except KeyboardInterrupt:  # pragma: no cover
         pool.terminate()
         raise
 
 
-def main():
+def main():  # pragma: no cover
     import os.path
     return main_internal(sys.argv[1:], os.path.basename(sys.argv[0]))
 

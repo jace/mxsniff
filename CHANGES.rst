@@ -5,6 +5,7 @@
 * Public email domains are now tagged and identified in results
 * A static domain list is included for very popular domains (typically public email domains)
 * The command line script now handles IDN names correctly
+* Email probe feature, to attempt a guess on whether the email is actually valid
 
 0.3.0
 =====
