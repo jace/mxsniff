@@ -132,6 +132,7 @@ def provider_info(provider):
     """
     if provider in all_providers:
         return {
+            'name': provider,
             'title': all_providers[provider].get('title'),
             'note': all_providers[provider].get('note'),
             'url': all_providers[provider].get('url'),
