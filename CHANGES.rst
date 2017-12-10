@@ -1,6 +1,8 @@
 0.3.2
 =====
 
+* Fix PyPI distribution (no code changes)
+
 0.3.1
 =====
 
