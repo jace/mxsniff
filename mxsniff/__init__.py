@@ -10,6 +10,7 @@ from functools import partial
 from six import text_type, string_types
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
+import socket
 import smtplib
 import dns.resolver
 import tldextract
@@ -273,7 +274,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
                 probe_result = ('fail', msg)
             else:  # Unknown code
                 error_msg = msg
-        except smtplib.SMTPException as e:
+        except (smtplib.SMTPException, socket.error) as e:
             error_msg = text_type(e)
             continue
         # Probe complete. Quit the connection, ignoring errors
