@@ -20,6 +20,7 @@ Command line usage::
     $ mxsniff example.com gmail.com example@gmail.com https://www.google.com
     $ mxsniff -v example.com
     $ mxsniff @filename_with_list_of_domains_or_emails_or_urls
+    $ mxsniff example@gmail.com -p your_email@example.com
 
 Python usage::
 
