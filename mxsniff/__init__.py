@@ -364,7 +364,10 @@ def main_internal(args, name='mxsniff'):
                 print(json.dumps(result, sort_keys=True), ',', sep='')
             else:
                 if args.probe:
-                    print(u"{item}: {probe}".format(item=result['query'], probe=result['probe'][0]))
+                    print(u"{item}: {result} {reason}".format(
+                        item=result['query'],
+                        result=result['probe'][0],
+                        reason=repr(result['probe'][1])))
                 else:
                     print(u"{item}: {provider}".format(item=result['query'], provider=', '.join(result['match'])))
     except KeyboardInterrupt:  # pragma: no cover
