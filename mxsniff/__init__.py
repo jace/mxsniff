@@ -21,7 +21,7 @@ from .providers import providers as all_providers, public_domains
 
 __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
-_value = ()  # Used in WildcardDomainDict as a placeholder
+_value = object()  # Used in WildcardDomainDict as a placeholder
 
 
 class WildcardDomainDict(object):
