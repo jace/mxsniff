@@ -7,6 +7,7 @@ MX Sniffer identifies common email service providers given an email address or a
 from __future__ import absolute_import, print_function
 import sys
 from functools import partial
+from collections import namedtuple
 from six import text_type, string_types
 from six.moves.urllib.parse import urlparse
 from email.utils import parseaddr
@@ -23,6 +24,7 @@ __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
 _value = object()  # Used in WildcardDomainDict as a placeholder
 tldextract = TLDExtract(suffix_list_urls=None)  # Don't fetch TLDs during a sniff
+ResultMessage = namedtuple('ResultMessage', ['result', 'message'])
 
 
 class WildcardDomainDict(object):
@@ -238,23 +240,32 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
     :param mx: MX server(s) to do the test at; will be tried in order until one is available
     :param your_email: Your email address, to perform the probe
     :param hostname: Optional hostname to perform the probe with
-    :return: 2-tuple, one of ('invalid', None), not an email address, ('error', message), probe error,
-        ('fail', reason), email doesn't exist, or ('pass', reason), email may exist
+    :return: 2-tuple of result and explanatory message
+
+    Possible results:
+
+    * invalid: This is not an email address
+    * error: The MX servers could not be probed
+    * fail: The email address doesn't appear to exist, but further investigation is necessary
+    * soft-fail: The email address is currently not accepting email
+    * hard-fail: The email address does not exist
+    * pass: The email address appears to exist
+    * pass-unverified: Mail server is accepting email but can't verify existence
 
     >>> mxprobe('jackerhack@gmail.com', 'gmail-smtp-in.l.google.com', 'example@example.com')[0]
     'pass'
     >>> mxprobe('foo@gmail.com', 'gmail-smtp-in.l.google.com', 'example@example.com')[0]
-    'fail'
+    'hard-fail'
     >>> mxprobe('example@example.com', [], 'example@example.com', timeout=5)[0]
     'error'
-    >>> mxprobe('example.com', [], 'example@example.com')[0]
+    >>> mxprobe('example.com', [], 'example@example.com').result
     'invalid'
     """
     if not hostname:
         hostname = 'probe.' + your_email.split('@', 1)[-1].strip()
     email = parseaddr(email)[1]
     if not is_email(email):
-        return ('invalid', None)
+        return ResultMessage('invalid', None)
     if not mx:
         mx = [email.split('@', 1)[-1].strip()]
     if isinstance(mx, string_types):
@@ -267,15 +278,41 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             smtp.ehlo_or_helo_if_needed()
             code, msg = smtp.mail(your_email)
             if code != 250:
-                error_msg = msg
+                error_msg = str(code) + ' ' + msg
                 continue
             code, msg = smtp.rcpt(email)
+            # List of codes from
+            # http://support.mailhostbox.com/email-administrators-guide-error-codes/
+            # 250 – Requested mail action completed and OK
             if code == 250:
-                probe_result = ('pass', msg)
-            elif code == 550:
-                probe_result = ('fail', msg)
+                probe_result = ResultMessage('pass', str(code) + ' ' + msg)
+            # 251 – Not Local User, forward email to forward path
+            # 252 – Cannot Verify user, will attempt delivery later
+            # 253 – Pending messages for node started
+            elif code in (251, 252, 253):
+                probe_result = ResultMessage('pass-unverified', str(code) + ' ' + msg)
+            # 510 – Check the recipient address
+            # 512 – Domain can not be found. Unknown host.
+            # 515 – Destination mailbox address invalid
+            # 521 – Domain does not accept mail
+            # 522 – Recipient has exceeded mailbox limit
+            # 531 – Mail system Full
+            # 533 – Remote server has insufficient disk space to hold email
+            # 540 – Email address has no DNS Server
+            # 550 – Requested action not taken: mailbox unavailable
+            # 551 – User not local; please try forward path
+            # 552 – Requested mail action aborted: exceeded storage allocation
+            # 553 – Requested action not taken: mailbox name not allowed
+            elif code in (510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
+                if msg.startswith('4.'):
+                    r = 'soft-fail'
+                elif msg.startswith('5.'):
+                    r = 'hard-fail'
+                else:
+                    r = 'fail'
+                probe_result = ResultMessage(r, str(code) + ' ' + msg)
             else:  # Unknown code
-                error_msg = msg
+                error_msg = str(code) + ' ' + msg
         except (smtplib.SMTPException, socket.error) as e:
             error_msg = text_type(e)
             continue
@@ -290,7 +327,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             return probe_result
         # If no result, continue to the next MX server
 
-    return ('error', error_msg)  # We couldn't talk to any MX server
+    return ResultMessage('error', error_msg)  # We couldn't talk to any MX server
 
 
 def mxbulksniff(items, ignore_errors=True):
@@ -324,7 +361,7 @@ def main_internal(args, name='mxsniff'):
     >>> main_internal(['example@gmail.com'])
     example@gmail.com: google-gmail
     >>> main_internal(['example@gmail.com', '-p', 'example@gmail.com'])  # doctest: +ELLIPSIS
-    example@gmail.com: fail ...
+    example@gmail.com: hard-fail ...
     >>> main_internal(['example.com', '-v'])
     {"domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"},
     """
