@@ -298,8 +298,9 @@ def mxbulksniff(items, ignore_errors=True):
     Identify the email service provider of a large set of domains or emails, caching to avoid
     repeat queries. Returns a generator that yields one item at a time
 
-    >>> [(i['query'], i['match']) for i in mxbulksniff(['example.com', 'google.com', 'http://www.google.com'])]
-    [('example.com', ['nomx']), ('google.com', ['google-apps']), ('http://www.google.com', ['google-apps'])]
+    >>> [(i['query'], i['match']) for i in mxbulksniff(
+    ...     ['example.com', 'google.com', 'http://www.google.com', 'example.com'])]
+    [('example.com', ['nomx']), ('google.com', ['google-apps']), ('http://www.google.com', ['google-apps']), ('example.com', ['nomx'])]
     """
     cache = {}
     for i in items:
