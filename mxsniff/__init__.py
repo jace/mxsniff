@@ -388,7 +388,7 @@ def main_internal(args, name='mxsniff'):
     # Assume non-Unicode names to be in UTF-8
     names = [n.decode('utf-8') if not isinstance(n, text_type) else n for n in args.names]
 
-    pool = Pool(processes=10)
+    pool = Pool(processes=10 if not args.probe else 1)
     it = pool.imap_unordered(
         partial(mxsniff_and_probe,
             probe_email=args.probe,
