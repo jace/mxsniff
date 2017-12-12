@@ -304,9 +304,9 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             # 552 – Requested mail action aborted: exceeded storage allocation
             # 553 – Requested action not taken: mailbox name not allowed
             elif code in (510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
-                if msg.startswith('4.'):
+                if msg.startswith(('4.', '#4.')):
                     r = 'soft-fail'
-                elif msg.startswith('5.'):
+                elif msg.startswith(('5.', '#5.')):
                     r = 'hard-fail'
                 else:
                     r = 'fail'
