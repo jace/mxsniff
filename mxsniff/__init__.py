@@ -321,8 +321,8 @@ def main_internal(args, name='mxsniff'):
 
     >>> main_internal(['example@gmail.com'])
     example@gmail.com: google-gmail
-    >>> main_internal(['example@gmail.com', '-p', 'example@gmail.com'])
-    example@gmail.com: fail
+    >>> main_internal(['example@gmail.com', '-p', 'example@gmail.com'])  # doctest: +ELLIPSIS
+    example@gmail.com: fail ...
     >>> main_internal(['example.com', '-v'])
     {"domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"},
     """
