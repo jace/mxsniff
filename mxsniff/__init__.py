@@ -294,6 +294,9 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             # 253 – Pending messages for node started
             elif code in (251, 252, 253):
                 probe_result = ResultCodeMessage('pass-unverified', code, msg)
+            # 450 - Requested mail action not taken: mailbox unavailable. Request refused
+            # 451 - Requested action aborted: local error in processing. Request is unable to be processed, try again
+            # 452 - Requested action not taken: insufficient system storage
             # 510 – Check the recipient address
             # 512 – Domain can not be found. Unknown host.
             # 515 – Destination mailbox address invalid
@@ -306,7 +309,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             # 551 – User not local; please try forward path
             # 552 – Requested mail action aborted: exceeded storage allocation
             # 553 – Requested action not taken: mailbox name not allowed
-            elif code in (510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
+            elif code in (450, 451, 452, 510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
                 # Some servers return ESMTP codes prefixed with #, others don't
                 if msg.startswith(('4.', '#4.')):
                     r = 'soft-fail'
