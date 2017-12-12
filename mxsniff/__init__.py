@@ -24,7 +24,7 @@ __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
 _value = object()  # Used in WildcardDomainDict as a placeholder
 tldextract = TLDExtract(suffix_list_urls=None)  # Don't fetch TLDs during a sniff
-ResultMessage = namedtuple('ResultMessage', ['result', 'message'])
+ResultCodeMessage = namedtuple('ResultCodeMessage', ['result', 'code', 'message'])
 
 
 class WildcardDomainDict(object):
@@ -240,7 +240,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
     :param mx: MX server(s) to do the test at; will be tried in order until one is available
     :param your_email: Your email address, to perform the probe
     :param hostname: Optional hostname to perform the probe with
-    :return: 2-tuple of result and explanatory message
+    :return: :attr:`ResultCodeMessage`, a 3-tuple of result, SMTP code and explanatory message
 
     Possible results:
 
@@ -265,11 +265,12 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
         hostname = 'probe.' + your_email.split('@', 1)[-1].strip()
     email = parseaddr(email)[1]
     if not is_email(email):
-        return ResultMessage('invalid', None)
+        return ResultCodeMessage('invalid', None, None)
     if not mx:
         mx = [email.split('@', 1)[-1].strip()]
     if isinstance(mx, string_types):
         mx = [mx]
+    error_code = None
     error_msg = None
     for mxserver in mx:
         probe_result = None
@@ -278,19 +279,21 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             smtp.ehlo_or_helo_if_needed()
             code, msg = smtp.mail(your_email)
             if code != 250:
-                error_msg = str(code) + ' ' + msg
+                error_code = code
+                error_msg = msg
                 continue
+            # Supply the email address as a recipient and see how the server responds
             code, msg = smtp.rcpt(email)
             # List of codes from
             # http://support.mailhostbox.com/email-administrators-guide-error-codes/
             # 250 – Requested mail action completed and OK
             if code == 250:
-                probe_result = ResultMessage('pass', str(code) + ' ' + msg)
+                probe_result = ResultCodeMessage('pass', code, msg)
             # 251 – Not Local User, forward email to forward path
             # 252 – Cannot Verify user, will attempt delivery later
             # 253 – Pending messages for node started
             elif code in (251, 252, 253):
-                probe_result = ResultMessage('pass-unverified', str(code) + ' ' + msg)
+                probe_result = ResultCodeMessage('pass-unverified', code, msg)
             # 510 – Check the recipient address
             # 512 – Domain can not be found. Unknown host.
             # 515 – Destination mailbox address invalid
@@ -304,16 +307,22 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             # 552 – Requested mail action aborted: exceeded storage allocation
             # 553 – Requested action not taken: mailbox name not allowed
             elif code in (510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
+                # Some servers return ESMTP codes prefixed with #, others don't
                 if msg.startswith(('4.', '#4.')):
                     r = 'soft-fail'
                 elif msg.startswith(('5.', '#5.')):
                     r = 'hard-fail'
                 else:
                     r = 'fail'
-                probe_result = ResultMessage(r, str(code) + ' ' + msg)
+                probe_result = ResultCodeMessage(r, code, msg)
             else:  # Unknown code
-                error_msg = str(code) + ' ' + msg
+                error_code = code
+                error_msg = msg
+        except smtplib.SMTPResponseException as e:
+            error_code = e.smtp_code
+            error_msg = e.smtp_error
         except (smtplib.SMTPException, socket.error) as e:
+            error_code = None
             error_msg = text_type(e)
             continue
         # Probe complete. Quit the connection, ignoring errors
@@ -327,7 +336,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             return probe_result
         # If no result, continue to the next MX server
 
-    return ResultMessage('error', error_msg)  # We couldn't talk to any MX server
+    return ResultCodeMessage('error', error_code, error_msg)  # We couldn't talk to any MX server
 
 
 def mxbulksniff(items, ignore_errors=True):
@@ -344,13 +353,13 @@ def mxbulksniff(items, ignore_errors=True):
         yield mxsniff(i, ignore_errors, cache)
 
 
-def mxsniff_and_probe(email_or_domain, probe_email, timeout=30, **kwargs):
+def mxsniff_and_probe(email, probe_email, timeout=30, **kwargs):
     """
     Combine :func:`mxsniff` and :func:`mxprobe` into a single result
     """
-    result = mxsniff(email_or_domain, timeout=timeout, **kwargs)
+    result = mxsniff(email, timeout=timeout, **kwargs)
     if probe_email:
-        result['probe'] = mxprobe(email_or_domain, [mx[1] for mx in result['mx']], probe_email, timeout=timeout)
+        result['probe'] = mxprobe(email, [mx[1] for mx in result['mx']], probe_email, timeout=timeout)
     return result
 
 
@@ -358,16 +367,21 @@ def main_internal(args, name='mxsniff'):
     """
     Console script
 
-    >>> main_internal(['example@gmail.com'])
-    example@gmail.com: google-gmail
+    >>> main_internal(['example@gmail.com'])  # doctest: +ELLIPSIS
+    example@gmail.com,google-gmail...
     >>> main_internal(['example@gmail.com', '-p', 'example@gmail.com'])  # doctest: +ELLIPSIS
-    example@gmail.com: hard-fail ...
+    example@gmail.com,hard-fail,...
     >>> main_internal(['example.com', '-v'])
-    {"domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"},
+    [
+    {"domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"}]
     """
     import argparse
     import json
     from multiprocessing.dummy import Pool
+    try:  # pragma: no cover
+        import unicodecsv as csv
+    except ImportError:
+        import csv
 
     parser = argparse.ArgumentParser(
         prog=name,
@@ -398,17 +412,24 @@ def main_internal(args, name='mxsniff'):
         names,
         10)
     try:
-        for result in it:
-            if args.verbose:
-                print(json.dumps(result, sort_keys=True), ',', sep='')
-            else:
-                if args.probe:
-                    print(u"{item}: {result} {reason}".format(
-                        item=result['query'],
-                        result=result['probe'][0],
-                        reason=repr(result['probe'][1])))
+        if args.verbose:
+            # Valid JSON output hack
+            firstline = True
+            print('[')
+            for result in it:
+                if firstline:
+                    firstline = False
                 else:
-                    print(u"{item}: {provider}".format(item=result['query'], provider=', '.join(result['match'])))
+                    print(',')
+                print(json.dumps(result, sort_keys=True), end='')
+            print(']')
+        else:
+            out = csv.writer(sys.stdout)
+            for result in it:
+                if args.probe:
+                    out.writerow([result['query']] + list(result['probe']))
+                else:
+                    out.writerow([result['query']] + result['match'])
     except KeyboardInterrupt:  # pragma: no cover
         pool.terminate()
         raise

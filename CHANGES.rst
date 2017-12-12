@@ -1,6 +1,9 @@
 0.3.3
 =====
 
+* `mxprobe` now distinguishes between soft and hard fails
+* `mxsniff` command line now produces valid CSV or JSON (verbose mode)
+
 0.3.2
 =====
 
