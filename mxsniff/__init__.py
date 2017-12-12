@@ -13,7 +13,7 @@ from email.utils import parseaddr
 import socket
 import smtplib
 import dns.resolver
-import tldextract
+from tldextract import TLDExtract
 from pyisemail import is_email
 
 from ._version import __version__, __version_info__  # NOQA
@@ -22,6 +22,7 @@ from .providers import providers as all_providers, public_domains
 __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
 _value = object()  # Used in WildcardDomainDict as a placeholder
+tldextract = TLDExtract(suffix_list_urls=None)  # Don't fetch TLDs during a sniff
 
 
 class WildcardDomainDict(object):
@@ -120,7 +121,7 @@ def get_domain(email_or_domain):
         name, addr = parseaddr(email_or_domain)
         domain = addr.split('@', 1)[-1]
     elif '//' in email_or_domain:
-        domain = tldextract.extract(urlparse(email_or_domain).netloc.split(':')[0]).registered_domain
+        domain = tldextract(urlparse(email_or_domain).netloc.split(':')[0]).registered_domain
     else:
         domain = email_or_domain.strip()
     return domain.lower()
@@ -189,7 +190,7 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
                 for rdata in resolver.query(domain, 'MX')])
             for preference, exchange in mx_answers:
                 # Extract the top-level domain for testing for self-hosted email later
-                rdomain = tldextract.extract(exchange).registered_domain
+                rdomain = tldextract(exchange).registered_domain
                 if rdomain not in tld:
                     tld.append(rdomain)
                 # Check if the provider is known from the MX record
@@ -208,7 +209,7 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
 
     if not matches:
         # Check for self-hosted email servers; identify them with the label 'self'
-        if tldextract.extract(domain).registered_domain in tld:
+        if tldextract(domain).registered_domain in tld:
             matches.append('self')
         if not matches:
             if mx_answers:
