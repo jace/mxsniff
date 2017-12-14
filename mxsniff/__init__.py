@@ -278,12 +278,14 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             smtp = smtplib.SMTP(mxserver, 25, hostname, timeout)
             smtp.ehlo_or_helo_if_needed()
             code, msg = smtp.mail(your_email)
+            msg = text_type(msg, 'utf-8')
             if code != 250:
                 error_code = code
                 error_msg = msg
                 continue
             # Supply the email address as a recipient and see how the server responds
             code, msg = smtp.rcpt(email)
+            msg = text_type(msg, 'utf-8')
             # List of codes from
             # http://support.mailhostbox.com/email-administrators-guide-error-codes/
             # 250 – Requested mail action completed and OK
