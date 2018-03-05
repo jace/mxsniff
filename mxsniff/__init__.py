@@ -107,6 +107,35 @@ class MXLookupException(Exception):
     pass
 
 
+def canonical_email(email, lowercase=False, strip_periods=False):
+    """
+    Return a canonical representation of an email address to facilitate string
+    comparison::
+
+        >>> canonical_email('Example <example+extra@example.com>')
+        'example@example.com'
+        >>> canonical_email('Exam.ple@gmail.com', lowercase=True, strip_periods=True)
+        'example@gmail.com'
+    """
+    # Example <example+extra@Example.com> --> example+extra@Example.com
+    name, addr = parseaddr(email)
+    if not is_email(addr):
+        return
+    # example+extra@Example.com --> example+extra, Example.com
+    mailbox, domain = addr.split('@', 1)
+    # example+extra --> example
+    if '+' in mailbox:
+        mailbox = mailbox[:mailbox.find('+')]
+    if strip_periods and '.' in mailbox:
+        mailbox = mailbox.replace('.', '')
+    if lowercase:
+        mailbox = mailbox.lower()
+    # Example.com --> example.com
+    domain = domain.lower()
+    # example, example.com --> example@example.com
+    return '%s@%s' % (mailbox, domain)
+
+
 def get_domain(email_or_domain):
     """
     Extract domain name from an email address, URL or (raw) domain name.
@@ -163,7 +192,7 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
     >>> mxsniff('example@gmail.com')['match']
     ['google-gmail']
     >>> sorted(mxsniff('https://google.com/').keys())
-    ['domain', 'match', 'mx', 'providers', 'public', 'query']
+    ['canonical', 'domain', 'match', 'mx', 'providers', 'public', 'query']
     """
     domain = get_domain(email_or_domain)
     if cache and domain in cache:
@@ -219,13 +248,19 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
             else:
                 matches.append('nomx')  # This domain has no mail servers
 
+    if matches:
+        canonical = canonical_email(email_or_domain, **all_providers.get(matches[0], {}).get('canonical_flags', {}))
+    else:
+        canonical = canonical_email(email_or_domain)
+
     result = {
         'query': email_or_domain,
         'domain': domain,
         'match': matches,
         'mx': mx_answers,
         'providers': rproviders,
-        'public': domain in public_domains or any([p['public'] for p in rproviders])
+        'public': domain in public_domains or any([p['public'] for p in rproviders]),
+        'canonical': canonical,
         }
     if cache:
         cache[domain] = result
@@ -378,7 +413,12 @@ def main_internal(args, name='mxsniff'):
     example@gmail.com,hard-fail,...
     >>> main_internal(['example.com', '-v'])
     [
-    {"domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"}]
+    {"canonical": null, "domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"}
+    ]
+    >>> main_internal(['Example <exam.ple@gmail.com>', '-v'])  # doctest: +ELLIPSIS
+    [
+    {"canonical": "example@gmail.com", "domain": "gmail.com", "match": ["google-gmail"], "mx": [...], "providers": [...], "public": true, "query": "Example <exam.ple@gmail.com>"}
+    ]
     """
     import argparse
     import json
@@ -427,7 +467,7 @@ def main_internal(args, name='mxsniff'):
                 else:
                     print(',')
                 print(json.dumps(result, sort_keys=True), end='')
-            print(']')
+            print('\n]')
         else:
             out = csv.writer(sys.stdout)
             for result in it:

@@ -35,10 +35,14 @@ providers = {
         ]},
     'amazon-aws': {'mx': [
         'inbound-smtp.*.amazonaws.com',
-        ]},
+        ],
+        'title': "Amazon AWS SES",
+        },
     'amazon-aws-ec2': {'mx': [
         '*.*.compute.amazonaws.com',
-        ]},
+        ],
+        'title': "Amazon AWS EC2",
+        },
     'anaxa': {'mx': [
         '*.anaxanet.com',
         ]},
@@ -48,6 +52,7 @@ providers = {
         'title': "Apple iCloud",
         'domains': ['icloud.com', 'mac.com', 'me.com'],
         'public': True,
+        'canonical_flags': {'lowercase': True},
         },
     'appriver': {'mx': [
         '*.*.*.arsmtp.com',
@@ -55,7 +60,9 @@ providers = {
         ]},
     'aol': {'mx': [
         '*.mx.aol.com',
-        ]},
+        ],
+        'title': "AOL",
+        },
     'carrierzone': {'mx': [
         '*.carrierzone.com',
         ]},
@@ -79,7 +86,9 @@ providers = {
         '*.mail.dreamhost.com',
         '*.*.mail.dreamhost.com',
         '*.*.*.mail.dreamhost.com',
-        ]},
+        ],
+        'title': "Dreamhost",
+        },
     'easydns': {'mx': [
         'mx.easymail.ca',
         ]},
@@ -120,7 +129,9 @@ providers = {
         ]},
     'gandi': {'mx': [
         'mail.gandi.net',
-        ]},
+        ],
+        'title': "Gandi.net",
+        },
     'gmx.com': {'mx': [
         '*.gmx.com',
         '*.gmx.net',
@@ -136,14 +147,18 @@ providers = {
         'smtp.europe.secureserver.net',
         'mailstore1.asia.secureserver.net',
         'smtp.asia.secureserver.net',
-        ]},
+        ],
+        'title': "GoDaddy",
+        },
     'google-gmail': {'mx': [
         'gmail-smtp-in.l.google.com',
         '*.gmail-smtp-in.l.google.com',
         ],
         'title': "Gmail",
+        'url': 'https://gmail.com/',
         'domains': ['gmail.com', 'googlemail.com'],
         'public': True,
+        'canonical_flags': {'lowercase': True, 'strip_periods': True},
         },
     'google-apps': {'mx': [
         'aspmx.l.google.com',
@@ -154,7 +169,8 @@ providers = {
         '*.*.*.psmtp.com',
         '*.*.*.*.psmtp.com',
         ],
-        'title': "G Suite"
+        'title': "G Suite",
+        'canonical_flags': {'lowercase': True, 'strip_periods': True},
         },
     'hostcentral': {'mx': [
         '*.hostcentral.net',
@@ -206,7 +222,9 @@ providers = {
         },
     'mailchimp-mandrill': {'mx': [
         '*.*.mandrillapp.com',
-        ]},
+        ],
+        'title': "Mailchimp Mandrill",
+        },
     'mailhostbox': {'mx': [
         '*.mailhostbox.com',
         ]},
@@ -253,7 +271,9 @@ providers = {
         ]},
     'netcore': {'mx': [
         '*.netcore.co.in',
-        ]},
+        ],
+        'title': "Netcore",
+        },
     'netmagic': {'mx': [
         '*.netmagicians.com',
         ]},
@@ -262,19 +282,24 @@ providers = {
         '*.*.netsolmail.net',
         '*.*.*.netsolmail.net',
         '*.*.*.*.netsolmail.net',
-        ]},
+        ],
+        'title': "Network Solutions",
+        },
     'one.com': {'mx': [
         '*.one.com',
         ]},
     'outlook-bizmail': {'mx': [
         '*.mail.*.outlook.com',
-        ]},
+        ],
+        'title': "Microsoft Outlook",
+        },
     'outlook-hotmail': {'mx': [
         '*.hotmail.com',
         ],
-        'title': "Outlook Hotmail",
+        'title': "Microsoft Outlook Hotmail",
         'domains': ['hotmail.com', 'msn.com', 'outlook.co', 'outlook.com', 'live.com', 'live.in'],
         'public': True,
+        'canonical_flags': {'lowercase': True},
         },
     'ovh': {'mx': [
         '*.ovh.net',
@@ -332,11 +357,14 @@ providers = {
     'rediffmail': {'mx': [
         'mx.rediffmail.rediff.akadns.net',
         ],
+        'title': "Rediffmail",
         'public': True,
         },
     'rediffmail-pro': {'mx': [
         'mail.rediffmailpro.com',
-        ]},
+        ],
+        'title': "Rediffmail Pro",
+        },
     'register.com': {'mx': [
         '*.register.com',
         ]},
@@ -354,7 +382,9 @@ providers = {
         ]},
     'sendgrid': {'mx': [
         'mx.sendgrid.net'
-        ]},
+        ],
+        'title': "Sendgrid",
+        },
     'servage': {'mx': [
         '*.servage.net',
         ]},
@@ -402,7 +432,8 @@ providers = {
         ],
         'title': "Yahoo Mail",
         'domains': ['rocketmail.com', 'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'ymail.com'],
-        'public': True
+        'public': True,
+        'canonical_flags': {'lowercase': True},
         },
     'yandex': {'mx': [
         'mx.yandex.net',
@@ -411,6 +442,7 @@ providers = {
         'title': "Yandex",
         'domains': ['yandex.com', 'yandex.ru'],
         'public': True,
+        'canonical_flags': {'lowercase': True},
         },
     'yodns': {'mx': [
         '*.yodns.com',
@@ -424,6 +456,7 @@ providers = {
         ],
         'title': "Zoho",
         'note': "Zoho provides both a public webmail service and custom domain hosting with the same MX servers",
+        'canonical_flags': {'lowercase': True},
         },
     }
 
