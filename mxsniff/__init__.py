@@ -107,7 +107,7 @@ class MXLookupException(Exception):
     pass
 
 
-def canonical_email(email, lowercase=False, strip_periods=False):
+def canonical_email(email, lowercase=False, strip_periods=False, substitute_domains={}):
     """
     Return a canonical representation of an email address to facilitate string
     comparison::
@@ -132,6 +132,9 @@ def canonical_email(email, lowercase=False, strip_periods=False):
         mailbox = mailbox.lower()
     # Example.com --> example.com
     domain = domain.lower()
+    # googlemail.com --> gmail.com
+    if domain in substitute_domains:
+        domain = substitute_domains[domain]
     # example, example.com --> example@example.com
     return '%s@%s' % (mailbox, domain)
 
@@ -415,9 +418,9 @@ def main_internal(args, name='mxsniff'):
     [
     {"canonical": null, "domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"}
     ]
-    >>> main_internal(['Example <exam.ple@gmail.com>', '-v'])  # doctest: +ELLIPSIS
+    >>> main_internal(['Example <exam.ple+extra@googlemail.com>', '-v'])  # doctest: +ELLIPSIS
     [
-    {"canonical": "example@gmail.com", "domain": "gmail.com", "match": ["google-gmail"], "mx": [...], "providers": [...], "public": true, "query": "Example <exam.ple@gmail.com>"}
+    {"canonical": "example@gmail.com", "domain": "googlemail.com", "match": ["google-gmail"], "mx": [...], "providers": [...], "public": true, "query": "Example <exam.ple+extra@googlemail.com>"}
     ]
     """
     import argparse

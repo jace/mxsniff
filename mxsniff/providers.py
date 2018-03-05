@@ -158,7 +158,13 @@ providers = {
         'url': 'https://gmail.com/',
         'domains': ['gmail.com', 'googlemail.com'],
         'public': True,
-        'canonical_flags': {'lowercase': True, 'strip_periods': True},
+        'canonical_flags': {
+            'lowercase': True,
+            'strip_periods': True,
+            'substitute_domains': {
+                'googlemail.com': 'gmail.com'
+                }
+            },
         },
     'google-apps': {'mx': [
         'aspmx.l.google.com',
@@ -433,7 +439,15 @@ providers = {
         'title': "Yahoo Mail",
         'domains': ['rocketmail.com', 'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'ymail.com'],
         'public': True,
-        'canonical_flags': {'lowercase': True},
+        'canonical_flags': {
+            'lowercase': True,
+            'substitute_domains': {
+                'rocketmail.com': 'yahoo.com',
+                'yahoo.co.uk': 'yahoo.com',
+                'yahoo.co.in': 'yahoo.com',
+                'ymail.com': 'yahoo.com',
+                },
+            },
         },
     'yandex': {'mx': [
         'mx.yandex.net',
