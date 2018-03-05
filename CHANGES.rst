@@ -1,8 +1,8 @@
 0.3.3
 =====
 
-* `mxprobe` now distinguishes between soft and hard fails
-* `mxsniff` command line now produces valid CSV or JSON (verbose mode)
+* ``mxprobe`` now distinguishes between soft and hard fails
+* ``mxsniff`` command line now produces valid CSV or JSON (verbose mode)
 * Verbose output now includes canonical representation of an email address to facilitate comparison
 
 0.3.2
