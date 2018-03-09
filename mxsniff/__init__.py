@@ -198,8 +198,10 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
     ['canonical', 'domain', 'match', 'mx', 'providers', 'public', 'query']
     """
     domain = get_domain(email_or_domain)
-    if cache and domain in cache:
-        return cache[domain]
+    if cache is not None and domain in cache:
+        result = dict(cache[domain])
+        result['query'] = email_or_domain
+        return result
 
     #: Providers that matched
     matches = []
@@ -265,7 +267,7 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
         'public': domain in public_domains or any([p['public'] for p in rproviders]),
         'canonical': canonical,
         }
-    if cache:
+    if cache is not None:
         cache[domain] = result
     return result
 

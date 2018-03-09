@@ -1,3 +1,8 @@
+0.3.4
+=====
+
+* Fixed cache handling
+
 0.3.3
 =====
 
