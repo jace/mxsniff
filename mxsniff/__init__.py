@@ -240,7 +240,7 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
             if ignore_errors:
                 pass
             else:
-                raise MXLookupException('{exc} {error} ({domain})'.format(
+                raise MXLookupException(u'{exc} {error} ({domain})'.format(
                     exc=e.__class__.__name__, error=text_type(e), domain=domain))
 
     if not matches:
