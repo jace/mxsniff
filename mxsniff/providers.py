@@ -433,11 +433,12 @@ providers = {
         ]},
     'yahoo-mail': {'mx': [
         '*.am0.yahoodns.net',
-        '*.mail.*.yahoodns.net',
+        'mx-eu.mail.*.yahoodns.net',
+        'mx-apac.mail.*.yahoodns.net',
         '*.mail.yahoo.co.jp'
         ],
         'title': "Yahoo Mail",
-        'domains': ['rocketmail.com', 'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'ymail.com'],
+        'domains': ['rocketmail.com', 'yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'ymail.com', 'yahoo.co.jp'],
         'public': True,
         'canonical_flags': {
             'lowercase': True,
@@ -448,6 +449,12 @@ providers = {
                 'ymail.com': 'yahoo.com',
                 },
             },
+        },
+    'yahoo-smallbiz': {'mx': [
+        'mx-biz.mail.am0.yahoodns.net',
+        '*.biz.mail.yahoo.com',
+        ],
+        'title': "Yahoo Small Business",
         },
     'yandex': {'mx': [
         'mx.yandex.net',
