@@ -1,3 +1,3 @@
 #!/bin/sh
-coverage run `which nosetests`
+coverage run -m pytest "$@"
 coverage report -m

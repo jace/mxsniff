@@ -10,3 +10,5 @@
 docs/_build
 build/
 dist/
+.pytest_cache
+__pycache__

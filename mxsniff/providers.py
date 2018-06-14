@@ -457,12 +457,17 @@ providers = {
         'title': "Yahoo Small Business",
         },
     'yandex': {'mx': [
-        'mx.yandex.net',
         'mx.yandex.ru',
         ],
         'title': "Yandex",
         'domains': ['yandex.com', 'yandex.ru'],
         'public': True,
+        'canonical_flags': {'lowercase': True},
+        },
+    'yandex-hosted': {'mx': [
+        'mx.yandex.net',
+        ],
+        'title': "Yandex Mail for Domain",
         'canonical_flags': {'lowercase': True},
         },
     'yodns': {'mx': [
