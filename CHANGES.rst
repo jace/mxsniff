@@ -2,6 +2,7 @@
 =====
 
 * Fixed cache handling
+* Distinguish Yandex public vs hosted email provider
 
 0.3.3
 =====

@@ -467,7 +467,7 @@ providers = {
     'yandex-hosted': {'mx': [
         'mx.yandex.net',
         ],
-        'title': "Yandex Mail for Domain",
+        'title': "Yandex Hosted",
         'canonical_flags': {'lowercase': True},
         },
     'yodns': {'mx': [
