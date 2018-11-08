@@ -1,18 +1,27 @@
+sudo: required
 language: python
 cache: pip
-sudo: required
-dist: xenial
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "pypy"
+
+matrix:
+  include:
+  - os: linux
+    dist: precise
+    python:
+      - "3.3"
+      - "pypy"
+      - "pypy3"
+  - os: linux
+    dist: xenial
+    python:
+      - "2.7"
+      - "3.4"
+      - "3.5"
+      - "3.6"
+      - "3.7"
+
 # command to install dependencies
 install:
-  - python setup.py develop
+  - python setup.py install
   - pip install pytest coverage coveralls
 script:
   - ./runtests.sh
