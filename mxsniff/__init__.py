@@ -47,6 +47,10 @@ class WildcardDomainDict(object):
     'example-wildcard'
     >>> d['sub.wildcard.example.com']
     'example-subdotted'
+    >>> d['example.wildcard.com']
+    Traceback (most recent call last):
+        ...
+    KeyError: 'example.wildcard.com'
     """
     def __init__(self, *args, **kwargs):
         self.tree = dict(*args, **kwargs)
@@ -79,6 +83,8 @@ class WildcardDomainDict(object):
                 tree = tree[item]
             elif '*' in tree:
                 tree = tree['*']
+            else:
+                raise KeyError(key)
         if _value in tree:
             return tree[_value]
         else:

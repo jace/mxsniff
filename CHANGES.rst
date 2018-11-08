@@ -1,3 +1,10 @@
+0.3.5
+=====
+
+* Fixed wildcard subdomain matching
+* New service provider
+* Updated PyPI classifiers
+
 0.3.4
 =====
 

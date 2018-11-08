@@ -66,6 +66,11 @@ providers = {
     'carrierzone': {'mx': [
         '*.carrierzone.com',
         ]},
+    'cogent': {'mx': [
+        '*.mail.cogentco.com',
+        ],
+        'title': "Cogent Communications"
+        },
     'cologlobal': {'mx': [
         '*.cologlobal.com',
         ]},

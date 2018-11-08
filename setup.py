@@ -15,7 +15,7 @@ mo = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]", versionfile, re.M)
 if mo:
     version = mo.group(1)
 else:
-    raise RuntimeError("Unable to find version string in mxsniff/_version.py.")
+    raise RuntimeError("Unable to find version string in mxsniff/_version.py")
 
 
 setup(name='mxsniff',
@@ -29,11 +29,18 @@ setup(name='mxsniff',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
-        'Development Status :: 3 - Alpha',
+        'Intended Audience :: System Administrators',
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Topic :: Communications :: Email',
+        'Topic :: Internet',
         'Topic :: Software Development :: Libraries',
+        'Topic :: Utilities',
         ],
     author='Kiran Jonnalagadda',
     author_email='jace@pobox.com',

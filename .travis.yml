@@ -11,10 +11,9 @@ python:
 # command to install dependencies
 install:
   - python setup.py develop
-  - pip install nose coverage coveralls
+  - pip install pytest coverage coveralls
 script:
-  - coverage run `which nosetests`
-  - coverage report -m
+  - ./runtests.sh
 after_success:
   - coveralls
 notifications:
