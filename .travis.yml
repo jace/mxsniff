@@ -1,23 +1,20 @@
-sudo: required
+sudo: false
 language: python
 cache: pip
+os: linux
+dist: trusty
 
 matrix:
   include:
-  - os: linux
-    dist: precise
-    python:
-      - "3.3"
-      - "pypy"
-      - "pypy3"
-  - os: linux
+  - python: "2.7"
+  - python: "3.3"
+  - python: "3.4"
+  - python: "3.5"
+  - python: "3.6"
+  - python: "pypy"
+  - python: "pypy3"
+  - python: "3.7"
     dist: xenial
-    python:
-      - "2.7"
-      - "3.4"
-      - "3.5"
-      - "3.6"
-      - "3.7"
 
 # command to install dependencies
 install:
