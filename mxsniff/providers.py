@@ -63,6 +63,11 @@ providers = {
         ],
         'title': "AOL",
         },
+    'barracuda': {'mx': [
+        '*.*.*.*.barracudanetworks.com',
+        ],
+        'title': "Barracuda Networks",
+        },
     'carrierzone': {'mx': [
         '*.carrierzone.com',
         ]},
@@ -218,6 +223,9 @@ providers = {
         ]},
     'lfchosting': {'mx': [
         '*.loosefoot.com',
+        ]},
+    'libraesva': {'mx': [
+        '*.esvacloud.com',
         ]},
     'liquidnet': {'mx': [
         '*.supremebox.com',
