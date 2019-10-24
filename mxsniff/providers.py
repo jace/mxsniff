@@ -367,8 +367,8 @@ providers = {
         '*.protonmail.ch',
         ],
         'title': "Protonmail",
-        'domains': ['protonmail.com', 'protonmail.ch'],
-        'public': True,
+        'public': False,
+        'note': "Protonmail offers both public and private email on the same MX servers",
         },
     'qq': {'mx': [
         '*.qq.com',
@@ -517,6 +517,7 @@ public_domains = {
     'msn.com',
     'outlook.co',
     'outlook.com',
+    'pm.me',
     'protonmail.ch',
     'protonmail.com',
     'rocketmail.com',
