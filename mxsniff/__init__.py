@@ -20,11 +20,11 @@ from pyisemail import is_email
 from ._version import __version__, __version_info__  # NOQA
 from .providers import providers as all_providers, public_domains
 
-__all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
+__all__ = ["MXLookupException", "get_domain", "mxsniff", "mxbulksniff"]
 
 _value = object()  # Used in WildcardDomainDict as a placeholder
 tldextract = TLDExtract(suffix_list_urls=None)  # Don't fetch TLDs during a sniff
-ResultCodeMessage = namedtuple('ResultCodeMessage', ['result', 'code', 'message'])
+ResultCodeMessage = namedtuple("ResultCodeMessage", ["result", "code", "message"])
 
 
 class WildcardDomainDict(object):
@@ -52,16 +52,17 @@ class WildcardDomainDict(object):
         ...
     KeyError: 'example.wildcard.com'
     """
+
     def __init__(self, *args, **kwargs):
         self.tree = dict(*args, **kwargs)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(' + repr(self.tree) + ')'
+        return self.__class__.__name__ + "(" + repr(self.tree) + ")"
 
     def _makeparts(self, key):
-        parts = key.lower().split('.')
-        while '' in parts:
-            parts.remove('')  # Handle trailing dot
+        parts = key.lower().split(".")
+        while "" in parts:
+            parts.remove("")  # Handle trailing dot
         return parts[::-1]
 
     def __setitem__(self, key, value):
@@ -81,8 +82,8 @@ class WildcardDomainDict(object):
             last = counter == length - 1
             if item in tree and (not last or last and _value in tree[item]):
                 tree = tree[item]
-            elif '*' in tree:
-                tree = tree['*']
+            elif "*" in tree:
+                tree = tree["*"]
             else:
                 raise KeyError(key)
         if _value in tree:
@@ -101,10 +102,10 @@ provider_mx = WildcardDomainDict()
 provider_domains = {}
 
 for name, data in all_providers.items():
-    for domain in data['mx']:
+    for domain in data["mx"]:
         provider_mx[domain] = name
-    if 'domains' in data:
-        for domain in data['domains']:
+    if "domains" in data:
+        for domain in data["domains"]:
             provider_domains[domain] = name
 del name, data, domain
 
@@ -113,7 +114,9 @@ class MXLookupException(Exception):
     pass
 
 
-def canonical_email(email, lowercase=False, strip_periods=False, substitute_domains=None):
+def canonical_email(
+    email, lowercase=False, strip_periods=False, substitute_domains=None
+):
     """
     Return a canonical representation of an email address to facilitate string
     comparison::
@@ -130,12 +133,12 @@ def canonical_email(email, lowercase=False, strip_periods=False, substitute_doma
     if not is_email(addr):
         return
     # example+extra@Example.com --> example+extra, Example.com
-    mailbox, domain = addr.split('@', 1)
+    mailbox, domain = addr.split("@", 1)
     # example+extra --> example
-    if '+' in mailbox:
-        mailbox = mailbox[:mailbox.find('+')]
-    if strip_periods and '.' in mailbox:
-        mailbox = mailbox.replace('.', '')
+    if "+" in mailbox:
+        mailbox = mailbox[: mailbox.find("+")]
+    if strip_periods and "." in mailbox:
+        mailbox = mailbox.replace(".", "")
     if lowercase:
         mailbox = mailbox.lower()
     # Example.com --> example.com
@@ -144,7 +147,7 @@ def canonical_email(email, lowercase=False, strip_periods=False, substitute_doma
     if domain in substitute_domains:
         domain = substitute_domains[domain]
     # example, example.com --> example@example.com
-    return '%s@%s' % (mailbox, domain)
+    return "%s@%s" % (mailbox, domain)
 
 
 def get_domain(email_or_domain):
@@ -158,12 +161,14 @@ def get_domain(email_or_domain):
     >>> get_domain('example.com')
     'example.com'
     """
-    if '@' in email_or_domain:
+    if "@" in email_or_domain:
         # Appears to be an email address.
         name, addr = parseaddr(email_or_domain)
-        domain = addr.split('@', 1)[-1]
-    elif '//' in email_or_domain:
-        domain = tldextract(urlparse(email_or_domain).netloc.split(':')[0]).registered_domain
+        domain = addr.split("@", 1)[-1]
+    elif "//" in email_or_domain:
+        domain = tldextract(
+            urlparse(email_or_domain).netloc.split(":")[0]
+        ).registered_domain
     else:
         domain = email_or_domain.strip()
     return domain.lower()
@@ -175,15 +180,21 @@ def provider_info(provider):
     """
     if provider in all_providers:
         return {
-            'name': provider,
-            'title': all_providers[provider].get('title'),
-            'note': all_providers[provider].get('note'),
-            'url': all_providers[provider].get('url'),
-            'public': all_providers[provider].get('public', False),
-            }
+            "name": provider,
+            "title": all_providers[provider].get("title"),
+            "note": all_providers[provider].get("note"),
+            "url": all_providers[provider].get("url"),
+            "public": all_providers[provider].get("public", False),
+        }
 
 
-def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_static_domains=True):
+def mxsniff(
+    email_or_domain,
+    ignore_errors=False,
+    cache=None,
+    timeout=30,
+    use_static_domains=True,
+):
     """
     Lookup MX records for a given email address, URL or domain name and identify the email service provider(s)
     from an internal list of known service providers.
@@ -208,7 +219,7 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
     domain = get_domain(email_or_domain)
     if cache is not None and domain in cache:
         result = dict(cache[domain])
-        result['query'] = email_or_domain
+        result["query"] = email_or_domain
         return result
 
     #: Providers that matched
@@ -230,8 +241,15 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
             resolver.timeout = timeout
             resolver.lifetime = timeout
             # Get answers, sorted by MX preference
-            mx_answers = sorted([(rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
-                for rdata in resolver.query(domain, 'MX')])
+            mx_answers = sorted(
+                [
+                    (
+                        rdata.preference,
+                        rdata.exchange.to_text(omit_final_dot=True).lower(),
+                    )
+                    for rdata in resolver.query(domain, "MX")
+                ]
+            )
             for preference, exchange in mx_answers:
                 # Extract the top-level domain for testing for self-hosted email later
                 rdomain = tldextract(exchange).registered_domain
@@ -242,7 +260,11 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
                 if provider and provider not in matches:
                     matches.append(provider)
                     rproviders.append(provider_info(provider))
-        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
+        except (
+            dns.resolver.NoAnswer,
+            dns.resolver.NXDOMAIN,
+            dns.resolver.NoNameservers,
+        ):
             pass
         except dns.exception.DNSException as e:
             if ignore_errors:
@@ -253,27 +275,30 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
     if not matches:
         # Check for self-hosted email servers; identify them with the label 'self'
         if tldextract(domain).registered_domain in tld:
-            matches.append('self')
+            matches.append("self")
         if not matches:
             if mx_answers:
-                matches.append('unknown')  # We don't know this one's provider
+                matches.append("unknown")  # We don't know this one's provider
             else:
-                matches.append('nomx')  # This domain has no mail servers
+                matches.append("nomx")  # This domain has no mail servers
 
     if matches:
-        canonical = canonical_email(email_or_domain, **all_providers.get(matches[0], {}).get('canonical_flags', {}))
+        canonical = canonical_email(
+            email_or_domain,
+            **all_providers.get(matches[0], {}).get("canonical_flags", {})
+        )
     else:
         canonical = canonical_email(email_or_domain)
 
     result = {
-        'query': email_or_domain,
-        'domain': domain,
-        'match': matches,
-        'mx': mx_answers,
-        'providers': rproviders,
-        'public': domain in public_domains or any([p['public'] for p in rproviders]),
-        'canonical': canonical,
-        }
+        "query": email_or_domain,
+        "domain": domain,
+        "match": matches,
+        "mx": mx_answers,
+        "providers": rproviders,
+        "public": domain in public_domains or any([p["public"] for p in rproviders]),
+        "canonical": canonical,
+    }
     if cache is not None:
         cache[domain] = result
     return result
@@ -309,12 +334,12 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
     'invalid'
     """
     if not hostname:
-        hostname = 'probe.' + your_email.split('@', 1)[-1].strip()
+        hostname = "probe." + your_email.split("@", 1)[-1].strip()
     email = parseaddr(email)[1]
     if not is_email(email):
-        return ResultCodeMessage('invalid', None, None)
+        return ResultCodeMessage("invalid", None, None)
     if not mx:
-        mx = [email.split('@', 1)[-1].strip()]
+        mx = [email.split("@", 1)[-1].strip()]
     if isinstance(mx, string_types):
         mx = [mx]
     error_code = None
@@ -325,24 +350,24 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             smtp = smtplib.SMTP(mxserver, 25, hostname, timeout)
             smtp.ehlo_or_helo_if_needed()
             code, msg = smtp.mail(your_email)
-            msg = text_type(msg, 'utf-8')
+            msg = text_type(msg, "utf-8")
             if code != 250:
                 error_code = code
                 error_msg = msg
                 continue
             # Supply the email address as a recipient and see how the server responds
             code, msg = smtp.rcpt(email)
-            msg = text_type(msg, 'utf-8')
+            msg = text_type(msg, "utf-8")
             # List of codes from
             # http://support.mailhostbox.com/email-administrators-guide-error-codes/
             # 250 – Requested mail action completed and OK
             if code == 250:
-                probe_result = ResultCodeMessage('pass', code, msg)
+                probe_result = ResultCodeMessage("pass", code, msg)
             # 251 – Not Local User, forward email to forward path
             # 252 – Cannot Verify user, will attempt delivery later
             # 253 – Pending messages for node started
             elif code in (251, 252, 253):
-                probe_result = ResultCodeMessage('pass-unverified', code, msg)
+                probe_result = ResultCodeMessage("pass-unverified", code, msg)
             # 450 - Requested mail action not taken: mailbox unavailable. Request refused
             # 451 - Requested action aborted: local error in processing. Request is unable to be processed, try again
             # 452 - Requested action not taken: insufficient system storage
@@ -358,14 +383,30 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             # 551 – User not local; please try forward path
             # 552 – Requested mail action aborted: exceeded storage allocation
             # 553 – Requested action not taken: mailbox name not allowed
-            elif code in (450, 451, 452, 510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
+            elif code in (
+                450,
+                451,
+                452,
+                510,
+                512,
+                515,
+                521,
+                522,
+                531,
+                533,
+                540,
+                550,
+                551,
+                552,
+                553,
+            ):
                 # Some servers return ESMTP codes prefixed with #, others don't
-                if msg.startswith(('4.', '#4.')):
-                    r = 'soft-fail'
-                elif msg.startswith(('5.', '#5.')):
-                    r = 'hard-fail'
+                if msg.startswith(("4.", "#4.")):
+                    r = "soft-fail"
+                elif msg.startswith(("5.", "#5.")):
+                    r = "hard-fail"
                 else:
-                    r = 'fail'
+                    r = "fail"
                 probe_result = ResultCodeMessage(r, code, msg)
             else:  # Unknown code
                 error_code = code
@@ -388,7 +429,9 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             return probe_result
         # If no result, continue to the next MX server
 
-    return ResultCodeMessage('error', error_code, error_msg)  # We couldn't talk to any MX server
+    return ResultCodeMessage(
+        "error", error_code, error_msg
+    )  # We couldn't talk to any MX server
 
 
 def mxbulksniff(items, ignore_errors=True):
@@ -411,11 +454,13 @@ def mxsniff_and_probe(email, probe_email, timeout=30, **kwargs):
     """
     result = mxsniff(email, timeout=timeout, **kwargs)
     if probe_email:
-        result['probe'] = mxprobe(email, [mx[1] for mx in result['mx']], probe_email, timeout=timeout)
+        result["probe"] = mxprobe(
+            email, [mx[1] for mx in result["mx"]], probe_email, timeout=timeout
+        )
     return result
 
 
-def main_internal(args, name='mxsniff'):
+def main_internal(args, name="mxsniff"):
     """
     Console script
 
@@ -435,6 +480,7 @@ def main_internal(args, name='mxsniff'):
     import argparse
     import json
     from multiprocessing.dummy import Pool
+
     try:  # pragma: no cover
         import unicodecsv as csv
     except ImportError:
@@ -443,50 +489,76 @@ def main_internal(args, name='mxsniff'):
     parser = argparse.ArgumentParser(
         prog=name,
         description="Identify email service providers given an email address, URL or domain name",
-        fromfile_prefix_chars='@')
-    parser.add_argument('names', metavar='email_or_url', nargs='+',
-        help="email or URL to look up; use @filename to load from a file")
-    parser.add_argument('-v', '--verbose', action='store_true',
-        help="return verbose results in JSON")
-    parser.add_argument('-i', '--ignore-errors', action='store_true',
-        help="ignore DNS lookup errors and continue with next item")
-    parser.add_argument('-t', '--timeout', type=int, metavar='T', default=30,
-        help="DNS timeout in seconds (default: %(default)s)")
-    parser.add_argument('-p', '--probe', metavar='your_email', default=None,
-        help="probe whether target email address exists (needs your email to perform the test)")
+        fromfile_prefix_chars="@",
+    )
+    parser.add_argument(
+        "names",
+        metavar="email_or_url",
+        nargs="+",
+        help="email or URL to look up; use @filename to load from a file",
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="return verbose results in JSON"
+    )
+    parser.add_argument(
+        "-i",
+        "--ignore-errors",
+        action="store_true",
+        help="ignore DNS lookup errors and continue with next item",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=int,
+        metavar="T",
+        default=30,
+        help="DNS timeout in seconds (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-p",
+        "--probe",
+        metavar="your_email",
+        default=None,
+        help="probe whether target email address exists (needs your email to perform the test)",
+    )
     args = parser.parse_args(args)
 
     # Assume non-Unicode names to be in UTF-8
-    names = [n.decode('utf-8') if not isinstance(n, text_type) else n for n in args.names]
+    names = [
+        n.decode("utf-8") if not isinstance(n, text_type) else n for n in args.names
+    ]
 
     pool = Pool(processes=10 if not args.probe else 1)
     it = pool.imap_unordered(
-        partial(mxsniff_and_probe,
+        partial(
+            mxsniff_and_probe,
             probe_email=args.probe,
             ignore_errors=args.ignore_errors,
             timeout=args.timeout,
-            use_static_domains=False),
+            use_static_domains=False,
+        ),
         names,
-        10)
+        10,
+    )
     try:
         if args.verbose:
             # Valid JSON output hack
             firstline = True
-            print('[')
+            print("[")
             for result in it:
                 if firstline:
                     firstline = False
                 else:
-                    print(',')
-                print(json.dumps(result, sort_keys=True), end='')
-            print('\n]')
+                    print(",")
+                print(json.dumps(result, sort_keys=True), end="")
+            print("\n]")
         else:
             out = csv.writer(sys.stdout)
             for result in it:
                 if args.probe:
-                    out.writerow([result['query']] + list(result['probe']))
+                    out.writerow([result["query"]] + list(result["probe"]))
                 else:
-                    out.writerow([result['query']] + result['match'])
+                    out.writerow([result["query"]] + result["match"])
     except KeyboardInterrupt:  # pragma: no cover
         pool.terminate()
         raise
@@ -494,7 +566,9 @@ def main_internal(args, name='mxsniff'):
 
 def main():  # pragma: no cover
     import os.path
+
     return main_internal(sys.argv[1:], os.path.basename(sys.argv[0]))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())
