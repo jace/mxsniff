@@ -58,7 +58,8 @@ class WildcardDomainDict(object):
     def __repr__(self):
         return self.__class__.__name__ + '(' + repr(self.tree) + ')'
 
-    def _makeparts(self, key):
+    @staticmethod
+    def _makeparts(key):
         parts = key.lower().split('.')
         while '' in parts:
             parts.remove('')  # Handle trailing dot
