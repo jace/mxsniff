@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 
 """
-MX Sniffer identifies common email service providers given an email address or a domain name.
+MX Sniff identifies common email service providers from an address or domain.
 """
 
 from __future__ import absolute_import, print_function
-import sys
-from functools import partial
-from collections import namedtuple
-from six import text_type, string_types
+from six import string_types, text_type
 from six.moves.urllib.parse import urlparse
-from email.utils import parseaddr
-import socket
-import smtplib
-import dns.resolver
-from tldextract import TLDExtract
-from pyisemail import is_email
 
-from ._version import __version__, __version_info__  # NOQA
-from .providers import providers as all_providers, public_domains
+from collections import namedtuple
+from email.utils import parseaddr
+from functools import partial
+import smtplib
+import socket
+import sys
+
+from pyisemail import is_email
+from tldextract import TLDExtract
+import dns.resolver
+
+from ._version import __version__, __version_info__  # NOQA: F401
+from .providers import providers as all_providers
+from .providers import public_domains
 
 __all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
@@ -52,6 +55,7 @@ class WildcardDomainDict(object):
         ...
     KeyError: 'example.wildcard.com'
     """
+
     def __init__(self, *args, **kwargs):
         self.tree = dict(*args, **kwargs)
 
@@ -113,7 +117,9 @@ class MXLookupException(Exception):
     pass
 
 
-def canonical_email(email, lowercase=False, strip_periods=False, substitute_domains={}):
+def canonical_email(
+    email, lowercase=False, strip_periods=False, substitute_domains=None
+):
     """
     Return a canonical representation of an email address to facilitate string
     comparison::
@@ -123,6 +129,8 @@ def canonical_email(email, lowercase=False, strip_periods=False, substitute_doma
         >>> canonical_email('Exam.ple@gmail.com', lowercase=True, strip_periods=True)
         'example@gmail.com'
     """
+    if substitute_domains is None:
+        substitute_domains = {}
     # Example <example+extra@Example.com> --> example+extra@Example.com
     name, addr = parseaddr(email)
     if not is_email(addr):
@@ -131,7 +139,7 @@ def canonical_email(email, lowercase=False, strip_periods=False, substitute_doma
     mailbox, domain = addr.split('@', 1)
     # example+extra --> example
     if '+' in mailbox:
-        mailbox = mailbox[:mailbox.find('+')]
+        mailbox = mailbox[: mailbox.find('+')]
     if strip_periods and '.' in mailbox:
         mailbox = mailbox.replace('.', '')
     if lowercase:
@@ -161,7 +169,9 @@ def get_domain(email_or_domain):
         name, addr = parseaddr(email_or_domain)
         domain = addr.split('@', 1)[-1]
     elif '//' in email_or_domain:
-        domain = tldextract(urlparse(email_or_domain).netloc.split(':')[0]).registered_domain
+        domain = tldextract(
+            urlparse(email_or_domain).netloc.split(':')[0]
+        ).registered_domain
     else:
         domain = email_or_domain.strip()
     return domain.lower()
@@ -178,21 +188,31 @@ def provider_info(provider):
             'note': all_providers[provider].get('note'),
             'url': all_providers[provider].get('url'),
             'public': all_providers[provider].get('public', False),
-            }
+        }
 
 
-def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_static_domains=True):
+def mxsniff(
+    email_or_domain,
+    ignore_errors=False,
+    cache=None,
+    timeout=30,
+    use_static_domains=True,
+):
     """
-    Lookup MX records for a given email address, URL or domain name and identify the email service provider(s)
-    from an internal list of known service providers.
+    Lookup MX records and identify the email service provider(s).
+
+    Accepts an email address, URL or domain name, and looks up an internal list of
+    well known providers.
 
     :param str email_or_domain: Email, domain or URL to lookup
     :param bool ignore_errors: Fail silently if there's a DNS lookup error
     :param dict cache: Cache with a dictionary interface to avoid redundant lookups
     :param int timeout: Timeout in seconds
-    :param bool use_static_domains: Speed up lookups by using the static domain list in the provider database
+    :param bool use_static_domains: Speed up lookups by using the static domain list in
+        the provider database
     :return: Matching domain, MX servers, and identified service provider(s)
-    :raises MXLookupException: If a DNS lookup error happens and ``ignore_errors`` is False
+    :raises MXLookupException: If a DNS lookup error happens and ``ignore_errors`` is
+        False
 
     >>> mxsniff('example.com')['match']
     ['nomx']
@@ -228,8 +248,10 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
             resolver.timeout = timeout
             resolver.lifetime = timeout
             # Get answers, sorted by MX preference
-            mx_answers = sorted([(rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
-                for rdata in resolver.query(domain, 'MX')])
+            mx_answers = sorted(
+                (rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
+                for rdata in resolver.query(domain, 'MX')
+            )
             for preference, exchange in mx_answers:
                 # Extract the top-level domain for testing for self-hosted email later
                 rdomain = tldextract(exchange).registered_domain
@@ -240,7 +262,11 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
                 if provider and provider not in matches:
                     matches.append(provider)
                     rproviders.append(provider_info(provider))
-        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
+        except (
+            dns.resolver.NoAnswer,
+            dns.resolver.NXDOMAIN,
+            dns.resolver.NoNameservers,
+        ):
             pass
         except dns.exception.DNSException as e:
             if ignore_errors:
@@ -259,7 +285,10 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
                 matches.append('nomx')  # This domain has no mail servers
 
     if matches:
-        canonical = canonical_email(email_or_domain, **all_providers.get(matches[0], {}).get('canonical_flags', {}))
+        canonical = canonical_email(
+            email_or_domain,
+            **all_providers.get(matches[0], {}).get('canonical_flags', {})
+        )
     else:
         canonical = canonical_email(email_or_domain)
 
@@ -269,9 +298,9 @@ def mxsniff(email_or_domain, ignore_errors=False, cache=None, timeout=30, use_st
         'match': matches,
         'mx': mx_answers,
         'providers': rproviders,
-        'public': domain in public_domains or any([p['public'] for p in rproviders]),
+        'public': domain in public_domains or any(p['public'] for p in rproviders),
         'canonical': canonical,
-        }
+    }
     if cache is not None:
         cache[domain] = result
     return result
@@ -282,16 +311,19 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
     Probe an email address at an MX server
 
     :param str email: Email address to be probed
-    :param mx: MX server(s) to do the test at; will be tried in order until one is available
+    :param mx: MX server(s) to do the test at; will be tried in order until one is
+        available
     :param your_email: Your email address, to perform the probe
     :param hostname: Optional hostname to perform the probe with
-    :return: :attr:`ResultCodeMessage`, a 3-tuple of result, SMTP code and explanatory message
+    :return: :attr:`ResultCodeMessage`, a 3-tuple of result, SMTP code and explanatory
+        message
 
     Possible results:
 
     * invalid: This is not an email address
     * error: The MX servers could not be probed
-    * fail: The email address doesn't appear to exist, but further investigation is necessary
+    * fail: The email address doesn't appear to exist, but further investigation is
+        necessary
     * soft-fail: The email address is currently not accepting email
     * hard-fail: The email address does not exist
     * pass: The email address appears to exist
@@ -341,22 +373,25 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             # 253 – Pending messages for node started
             elif code in (251, 252, 253):
                 probe_result = ResultCodeMessage('pass-unverified', code, msg)
-            # 450 - Requested mail action not taken: mailbox unavailable. Request refused
-            # 451 - Requested action aborted: local error in processing. Request is unable to be processed, try again
-            # 452 - Requested action not taken: insufficient system storage
-            # 510 – Check the recipient address
-            # 512 – Domain can not be found. Unknown host.
-            # 515 – Destination mailbox address invalid
-            # 521 – Domain does not accept mail
-            # 522 – Recipient has exceeded mailbox limit
-            # 531 – Mail system Full
-            # 533 – Remote server has insufficient disk space to hold email
-            # 540 – Email address has no DNS Server
-            # 550 – Requested action not taken: mailbox unavailable
-            # 551 – User not local; please try forward path
-            # 552 – Requested mail action aborted: exceeded storage allocation
-            # 553 – Requested action not taken: mailbox name not allowed
-            elif code in (450, 451, 452, 510, 512, 515, 521, 522, 531, 533, 540, 550, 551, 552, 553):
+            elif code in (
+                450,  # Requested mail action not taken: mailbox unavailable. Request
+                #       refused
+                451,  # Requested action aborted: local error in processing. Request is
+                #       unable to be processed, try again
+                452,  # Requested action not taken: insufficient system storage
+                510,  # Check the recipient address
+                512,  # Domain can not be found. Unknown host.
+                515,  # Destination mailbox address invalid
+                521,  # Domain does not accept mail
+                522,  # Recipient has exceeded mailbox limit
+                531,  # Mail system Full
+                533,  # Remote server has insufficient disk space to hold email
+                540,  # Email address has no DNS Server
+                550,  # Requested action not taken: mailbox unavailable
+                551,  # User not local; please try forward path
+                552,  # Requested mail action aborted: exceeded storage allocation
+                553,  # Requested action not taken: mailbox name not allowed
+            ):
                 # Some servers return ESMTP codes prefixed with #, others don't
                 if msg.startswith(('4.', '#4.')):
                     r = 'soft-fail'
@@ -386,13 +421,14 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             return probe_result
         # If no result, continue to the next MX server
 
-    return ResultCodeMessage('error', error_code, error_msg)  # We couldn't talk to any MX server
+    # We couldn't talk to any MX server
+    return ResultCodeMessage('error', error_code, error_msg)
 
 
 def mxbulksniff(items, ignore_errors=True):
     """
-    Identify the email service provider of a large set of domains or emails, caching to avoid
-    repeat queries. Returns a generator that yields one item at a time
+    Identify the email service provider of a large set of domains or emails, caching to
+    avoid repeat queries. Returns a generator that yields one item at a time
 
     >>> [(i['query'], i['match']) for i in mxbulksniff(
     ...     ['example.com', 'google.com', 'http://www.google.com', 'example.com'])]
@@ -409,7 +445,9 @@ def mxsniff_and_probe(email, probe_email, timeout=30, **kwargs):
     """
     result = mxsniff(email, timeout=timeout, **kwargs)
     if probe_email:
-        result['probe'] = mxprobe(email, [mx[1] for mx in result['mx']], probe_email, timeout=timeout)
+        result['probe'] = mxprobe(
+            email, [mx[1] for mx in result['mx']], probe_email, timeout=timeout
+        )
     return result
 
 
@@ -433,6 +471,7 @@ def main_internal(args, name='mxsniff'):
     import argparse
     import json
     from multiprocessing.dummy import Pool
+
     try:  # pragma: no cover
         import unicodecsv as csv
     except ImportError:
@@ -440,44 +479,72 @@ def main_internal(args, name='mxsniff'):
 
     parser = argparse.ArgumentParser(
         prog=name,
-        description="Identify email service providers given an email address, URL or domain name",
-        fromfile_prefix_chars='@')
-    parser.add_argument('names', metavar='email_or_url', nargs='+',
-        help="email or URL to look up; use @filename to load from a file")
-    parser.add_argument('-v', '--verbose', action='store_true',
-        help="return verbose results in JSON")
-    parser.add_argument('-i', '--ignore-errors', action='store_true',
-        help="ignore DNS lookup errors and continue with next item")
-    parser.add_argument('-t', '--timeout', type=int, metavar='T', default=30,
-        help="DNS timeout in seconds (default: %(default)s)")
-    parser.add_argument('-p', '--probe', metavar='your_email', default=None,
-        help="probe whether target email address exists (needs your email to perform the test)")
+        description="Identify email service providers given an email address, URL or"
+        " domain name",
+        fromfile_prefix_chars='@',
+    )
+    parser.add_argument(
+        'names',
+        metavar='email_or_url',
+        nargs='+',
+        help="email or URL to look up; use @filename to load from a file",
+    )
+    parser.add_argument(
+        '-v', '--verbose', action='store_true', help="return verbose results in JSON"
+    )
+    parser.add_argument(
+        '-i',
+        '--ignore-errors',
+        action='store_true',
+        help="ignore DNS lookup errors and continue with next item",
+    )
+    parser.add_argument(
+        '-t',
+        '--timeout',
+        type=int,
+        metavar='T',
+        default=30,
+        help="DNS timeout in seconds (default: %(default)s)",
+    )
+    parser.add_argument(
+        '-p',
+        '--probe',
+        metavar='your_email',
+        default=None,
+        help="probe whether target email address exists (needs your email to perform"
+        " the test)",
+    )
     args = parser.parse_args(args)
 
     # Assume non-Unicode names to be in UTF-8
-    names = [n.decode('utf-8') if not isinstance(n, text_type) else n for n in args.names]
+    names = [
+        n.decode('utf-8') if not isinstance(n, text_type) else n for n in args.names
+    ]
 
     pool = Pool(processes=10 if not args.probe else 1)
     it = pool.imap_unordered(
-        partial(mxsniff_and_probe,
+        partial(
+            mxsniff_and_probe,
             probe_email=args.probe,
             ignore_errors=args.ignore_errors,
             timeout=args.timeout,
-            use_static_domains=False),
+            use_static_domains=False,
+        ),
         names,
-        10)
+        10,
+    )
     try:
         if args.verbose:
             # Valid JSON output hack
             firstline = True
-            print('[')
+            print('[')  # NOQA: T001
             for result in it:
                 if firstline:
                     firstline = False
                 else:
-                    print(',')
-                print(json.dumps(result, sort_keys=True), end='')
-            print('\n]')
+                    print(',')  # NOQA: T001
+                print(json.dumps(result, sort_keys=True), end='')  # NOQA: T001
+            print('\n]')  # NOQA: T001
         else:
             out = csv.writer(sys.stdout)
             for result in it:
@@ -492,7 +559,9 @@ def main_internal(args, name='mxsniff'):
 
 def main():  # pragma: no cover
     import os.path
+
     return main_internal(sys.argv[1:], os.path.basename(sys.argv[0]))
+
 
 if __name__ == '__main__':
     sys.exit(main())
