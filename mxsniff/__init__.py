@@ -113,7 +113,7 @@ class MXLookupException(Exception):
     pass
 
 
-def canonical_email(email, lowercase=False, strip_periods=False, substitute_domains={}):
+def canonical_email(email, lowercase=False, strip_periods=False, substitute_domains=None):
     """
     Return a canonical representation of an email address to facilitate string
     comparison::
@@ -123,6 +123,8 @@ def canonical_email(email, lowercase=False, strip_periods=False, substitute_doma
         >>> canonical_email('Exam.ple@gmail.com', lowercase=True, strip_periods=True)
         'example@gmail.com'
     """
+    if substitute_domains is None:
+        substitute_domains = {}
     # Example <example+extra@Example.com> --> example+extra@Example.com
     name, addr = parseaddr(email)
     if not is_email(addr):
