@@ -62,7 +62,8 @@ class WildcardDomainDict(object):
     def __repr__(self):
         return self.__class__.__name__ + '(' + repr(self.tree) + ')'
 
-    def _makeparts(self, key):
+    @staticmethod
+    def _makeparts(key):
         parts = key.lower().split('.')
         while '' in parts:
             parts.remove('')  # Handle trailing dot
@@ -91,8 +92,7 @@ class WildcardDomainDict(object):
                 raise KeyError(key)
         if _value in tree:
             return tree[_value]
-        else:
-            raise KeyError(key)
+        raise KeyError(key)
 
     def get(self, key, default=None):
         try:
@@ -104,13 +104,17 @@ class WildcardDomainDict(object):
 provider_mx = WildcardDomainDict()
 provider_domains = {}
 
-for name, data in all_providers.items():
-    for domain in data['mx']:
-        provider_mx[domain] = name
-    if 'domains' in data:
-        for domain in data['domains']:
-            provider_domains[domain] = name
-del name, data, domain
+
+def __populate_dicts(pmx, pd):
+    for name, data in all_providers.items():
+        for domain in data['mx']:
+            pmx[domain] = name
+        if 'domains' in data:
+            for domain in data['domains']:
+                pd[domain] = name
+
+
+__populate_dicts(provider_mx, provider_domains)
 
 
 class MXLookupException(Exception):
@@ -132,7 +136,7 @@ def canonical_email(
     if substitute_domains is None:
         substitute_domains = {}
     # Example <example+extra@Example.com> --> example+extra@Example.com
-    name, addr = parseaddr(email)
+    addr = parseaddr(email)[1]
     if not is_email(addr):
         return
     # example+extra@Example.com --> example+extra, Example.com
@@ -166,7 +170,7 @@ def get_domain(email_or_domain):
     """
     if '@' in email_or_domain:
         # Appears to be an email address.
-        name, addr = parseaddr(email_or_domain)
+        addr = parseaddr(email_or_domain)[1]
         domain = addr.split('@', 1)[-1]
     elif '//' in email_or_domain:
         domain = tldextract(
@@ -252,7 +256,7 @@ def mxsniff(
                 (rdata.preference, rdata.exchange.to_text(omit_final_dot=True).lower())
                 for rdata in resolver.query(domain, 'MX')
             )
-            for preference, exchange in mx_answers:
+            for _preference, exchange in mx_answers:
                 # Extract the top-level domain for testing for self-hosted email later
                 rdomain = tldextract(exchange).registered_domain
                 if rdomain not in tld:
