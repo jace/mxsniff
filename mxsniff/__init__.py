@@ -1,16 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 MX Sniff identifies common email service providers from an address or domain.
 """
 
-from __future__ import absolute_import, print_function
-from six import string_types, text_type
-from six.moves.urllib.parse import urlparse
-
 from collections import namedtuple
 from email.utils import parseaddr
 from functools import partial
+from urllib.parse import urlparse
 import smtplib
 import socket
 import sys
@@ -23,14 +18,22 @@ from ._version import __version__, __version_info__  # NOQA: F401
 from .providers import providers as all_providers
 from .providers import public_domains
 
-__all__ = ['MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
+__all__ = ['MxLookupError', 'MXLookupException', 'get_domain', 'mxsniff', 'mxbulksniff']
 
 _value = object()  # Used in WildcardDomainDict as a placeholder
 tldextract = TLDExtract(suffix_list_urls=None)  # Don't fetch TLDs during a sniff
 ResultCodeMessage = namedtuple('ResultCodeMessage', ['result', 'code', 'message'])
 
 
-class WildcardDomainDict(object):
+class MxLookupError(Exception):
+    """Exception raised when MX records cannot be looked up."""
+
+
+# XXX: Legacy name
+MXLookupException = MxLookupError
+
+
+class WildcardDomainDict:
     """
     Like a dict, but with custom __getitem__ and __setitem__ to make a nested dictionary
     with wildcard support for domain name mappings.
@@ -115,10 +118,6 @@ def __populate_dicts(pmx, pd):
 
 
 __populate_dicts(provider_mx, provider_domains)
-
-
-class MXLookupException(Exception):
-    pass
 
 
 def canonical_email(
@@ -215,11 +214,11 @@ def mxsniff(
     :param bool use_static_domains: Speed up lookups by using the static domain list in
         the provider database
     :return: Matching domain, MX servers, and identified service provider(s)
-    :raises MXLookupException: If a DNS lookup error happens and ``ignore_errors`` is
+    :raises MxLookupError: If a DNS lookup error happens and ``ignore_errors`` is
         False
 
     >>> mxsniff('example.com')['match']
-    ['nomx']
+    ['nullmx']
     >>> mxsniff('__invalid_domain_name__.com')['match']
     ['nomx']
     >>> mxsniff('example@gmail.com')['match']
@@ -276,7 +275,7 @@ def mxsniff(
             if ignore_errors:
                 pass
             else:
-                raise MXLookupException(e, domain)
+                raise MxLookupError(e, domain)
 
     if not matches:
         # Check for self-hosted email servers; identify them with the label 'self'
@@ -284,14 +283,17 @@ def mxsniff(
             matches.append('self')
         if not matches:
             if mx_answers:
-                matches.append('unknown')  # We don't know this one's provider
+                if mx_answers[0][1] == '.':
+                    matches.append('nullmx')  # Email not accepted (RFC 7505)
+                else:
+                    matches.append('unknown')  # We don't know this one's provider
             else:
                 matches.append('nomx')  # This domain has no mail servers
 
     if matches:
         canonical = canonical_email(
             email_or_domain,
-            **all_providers.get(matches[0], {}).get('canonical_flags', {})
+            **all_providers.get(matches[0], {}).get('canonical_flags', {}),
         )
     else:
         canonical = canonical_email(email_or_domain)
@@ -349,7 +351,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
         return ResultCodeMessage('invalid', None, None)
     if not mx:
         mx = [email.split('@', 1)[-1].strip()]
-    if isinstance(mx, string_types):
+    if isinstance(mx, str):
         mx = [mx]
     error_code = None
     error_msg = None
@@ -359,14 +361,14 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             smtp = smtplib.SMTP(mxserver, 25, hostname, timeout)
             smtp.ehlo_or_helo_if_needed()
             code, msg = smtp.mail(your_email)
-            msg = text_type(msg, 'utf-8')
+            msg = str(msg, 'utf-8')
             if code != 250:
                 error_code = code
                 error_msg = msg
                 continue
             # Supply the email address as a recipient and see how the server responds
             code, msg = smtp.rcpt(email)
-            msg = text_type(msg, 'utf-8')
+            msg = str(msg, 'utf-8')
             # List of codes from
             # http://support.mailhostbox.com/email-administrators-guide-error-codes/
             # 250 – Requested mail action completed and OK
@@ -412,7 +414,7 @@ def mxprobe(email, mx, your_email, hostname=None, timeout=30):
             error_msg = e.smtp_error
         except (smtplib.SMTPException, socket.error) as e:
             error_code = None
-            error_msg = text_type(e)
+            error_msg = str(e)
             continue
         # Probe complete. Quit the connection, ignoring errors
         try:
@@ -436,7 +438,7 @@ def mxbulksniff(items, ignore_errors=True):
 
     >>> [(i['query'], i['match']) for i in mxbulksniff(
     ...     ['example.com', 'google.com', 'http://www.google.com', 'example.com'])]
-    [('example.com', ['nomx']), ('google.com', ['google-apps']), ('http://www.google.com', ['google-apps']), ('example.com', ['nomx'])]
+    [('example.com', ['nullmx']), ('google.com', ['google-apps']), ('http://www.google.com', ['google-apps']), ('example.com', ['nullmx'])]
     """
     cache = {}
     for i in items:
@@ -465,21 +467,17 @@ def main_internal(args, name='mxsniff'):
     example@gmail.com,hard-fail,...
     >>> main_internal(['example.com', '-v'])
     [
-    {"canonical": null, "domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"}
+    {"canonical": null, "domain": "example.com", "match": ["nullmx"], "mx": [[0, "."]], "providers": [], "public": false, "query": "example.com"}
     ]
     >>> main_internal(['Example <exam.ple+extra@googlemail.com>', '-v'])  # doctest: +ELLIPSIS
     [
     {"canonical": "example@gmail.com", "domain": "googlemail.com", "match": ["google-gmail"], "mx": [...], "providers": [...], "public": true, "query": "Example <exam.ple+extra@googlemail.com>"}
     ]
     """
-    import argparse
-    import json
     from multiprocessing.dummy import Pool
-
-    try:  # pragma: no cover
-        import unicodecsv as csv
-    except ImportError:
-        import csv
+    import argparse
+    import csv
+    import json
 
     parser = argparse.ArgumentParser(
         prog=name,
@@ -521,9 +519,7 @@ def main_internal(args, name='mxsniff'):
     args = parser.parse_args(args)
 
     # Assume non-Unicode names to be in UTF-8
-    names = [
-        n.decode('utf-8') if not isinstance(n, text_type) else n for n in args.names
-    ]
+    names = [n.decode('utf-8') if not isinstance(n, str) else n for n in args.names]
 
     pool = Pool(processes=10 if not args.probe else 1)
     it = pool.imap_unordered(
