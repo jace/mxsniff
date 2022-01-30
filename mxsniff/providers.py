@@ -6,7 +6,7 @@ __all__ = ['providers', 'public_domains']
 
 
 # NOTE: Please add new providers and MX servers in alphabetic order.
-# The labels `self`, `unknown` and `nomx` are reserved. Don't add them here.
+# The labels `self`, `unknown`, `nomx` and `nullmx` are reserved. Don't add them here.
 # Provider names are identifiers and should never change, even if the holding
 # entity has changed. Update the title instead.
 # Keys:

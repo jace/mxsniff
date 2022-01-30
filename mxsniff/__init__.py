@@ -33,7 +33,7 @@ class MxLookupError(Exception):
 MXLookupException = MxLookupError
 
 
-class WildcardDomainDict(object):
+class WildcardDomainDict:
     """
     Like a dict, but with custom __getitem__ and __setitem__ to make a nested dictionary
     with wildcard support for domain name mappings.
@@ -218,7 +218,7 @@ def mxsniff(
         False
 
     >>> mxsniff('example.com')['match']
-    ['nomx']
+    ['nullmx']
     >>> mxsniff('__invalid_domain_name__.com')['match']
     ['nomx']
     >>> mxsniff('example@gmail.com')['match']
@@ -283,7 +283,10 @@ def mxsniff(
             matches.append('self')
         if not matches:
             if mx_answers:
-                matches.append('unknown')  # We don't know this one's provider
+                if mx_answers[0][1] == '.':
+                    matches.append('nullmx')  # Email not accepted (RFC 7505)
+                else:
+                    matches.append('unknown')  # We don't know this one's provider
             else:
                 matches.append('nomx')  # This domain has no mail servers
 
@@ -435,7 +438,7 @@ def mxbulksniff(items, ignore_errors=True):
 
     >>> [(i['query'], i['match']) for i in mxbulksniff(
     ...     ['example.com', 'google.com', 'http://www.google.com', 'example.com'])]
-    [('example.com', ['nomx']), ('google.com', ['google-apps']), ('http://www.google.com', ['google-apps']), ('example.com', ['nomx'])]
+    [('example.com', ['nullmx']), ('google.com', ['google-apps']), ('http://www.google.com', ['google-apps']), ('example.com', ['nullmx'])]
     """
     cache = {}
     for i in items:
@@ -464,7 +467,7 @@ def main_internal(args, name='mxsniff'):
     example@gmail.com,hard-fail,...
     >>> main_internal(['example.com', '-v'])
     [
-    {"canonical": null, "domain": "example.com", "match": ["nomx"], "mx": [], "providers": [], "public": false, "query": "example.com"}
+    {"canonical": null, "domain": "example.com", "match": ["nullmx"], "mx": [], "providers": [], "public": false, "query": "example.com"}
     ]
     >>> main_internal(['Example <exam.ple+extra@googlemail.com>', '-v'])  # doctest: +ELLIPSIS
     [
