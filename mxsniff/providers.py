@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Known email providers and their MX domains.
 """
