@@ -467,7 +467,7 @@ def main_internal(args, name='mxsniff'):
     example@gmail.com,hard-fail,...
     >>> main_internal(['example.com', '-v'])
     [
-    {"canonical": null, "domain": "example.com", "match": ["nullmx"], "mx": [], "providers": [], "public": false, "query": "example.com"}
+    {"canonical": null, "domain": "example.com", "match": ["nullmx"], "mx": [[0, "."]], "providers": [], "public": false, "query": "example.com"}
     ]
     >>> main_internal(['Example <exam.ple+extra@googlemail.com>', '-v'])  # doctest: +ELLIPSIS
     [
