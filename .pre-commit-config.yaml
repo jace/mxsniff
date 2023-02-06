@@ -13,18 +13,18 @@ repos:
             "--remove-unused-variables",
             "--remove-duplicate-keys",
           ]
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
     hooks:
       - id: isort
         additional_dependencies:
           - toml
-  - repo: https://github.com/ambv/black
-    rev: 22.1.0
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.4.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -50,8 +50,8 @@ repos:
       - id: no-commit-to-branch
       - id: requirements-txt-fixer
       - id: trailing-whitespace
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
     hooks:
       - id: flake8
         additional_dependencies:
@@ -66,7 +66,7 @@ repos:
           - flake8-print
           - pep8-naming
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.2
+    rev: 1.7.4
     hooks:
       - id: bandit
         language_version: python3
